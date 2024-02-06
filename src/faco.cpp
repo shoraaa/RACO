@@ -1682,7 +1682,7 @@ run_raco(const ProblemInstance &problem,
                     auto nn = *nn_list.begin();
                     bool greed = get_rng().next_float() < opt.p_greed_;
 
-                    auto sel = select_next_node(pheromone, heuristic,
+                    auto sel = greed ? nn : select_next_node(pheromone, heuristic,
                                                 nn_list,
                                                 nn_product_cache,
                                                 problem.get_backup_neighbors(curr, cl_size, bl_size),
