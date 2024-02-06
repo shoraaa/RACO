@@ -1743,8 +1743,8 @@ run_raco(const ProblemInstance &problem,
                 }
 
                 uint32_t best_route = 0;
-                // if (route[1].cost_ < route[0].cost_) best_route = 1;
-                // if (route[2].cost_ < route[best_route].cost_) best_route = 2;
+                if (route[1].cost_ < route[0].cost_) best_route = 1;
+                if (route[2].cost_ < route[best_route].cost_) best_route = 2;
 
 
                 // No need to recalculate route length -- we are updating it along with the changes
