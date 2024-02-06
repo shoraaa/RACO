@@ -1785,8 +1785,8 @@ run_raco(const ProblemInstance &problem,
                 if (iteration_best->cost_ < best_ant->cost_) {
                     best_ant->update(iteration_best->route_, iteration_best->cost_);
 
-                    // auto error = problem.calc_relative_error(best_ant->cost_);
-                    // best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
+                    auto error = problem.calc_relative_error(best_ant->cost_);
+                    best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
                 }
 
                 if (iteration % 1000 == 0) {
