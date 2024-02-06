@@ -1021,7 +1021,7 @@ public:
      * of the new edges should be inserted into checklist.
      */
     void two_opt_nn(const ProblemInstance &instance,
-                    std::vector<uint32_t> &checklist,
+                    std::vector<uint32_t> checklist,
                     uint32_t nn_list_size) {
 
         // We assume symmetry so that the order of the nodes does not matter
@@ -1721,21 +1721,21 @@ run_raco(const ProblemInstance &problem,
                     }
                     curr_node = sel;
 
-                    // if (new_edges == target_new_edges - 2) {
-                    //     route[1].cost_ = route[0].cost_;
-                    //     route[1].route_ = route[0].route_;
-                    //     if (use_ls) {
-                    //         route[1].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
-                    //     }
-                    // } 
+                    if (new_edges == target_new_edges - 2) {
+                        route[1].cost_ = route[0].cost_;
+                        route[1].route_ = route[0].route_;
+                        if (use_ls) {
+                            route[1].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                        }
+                    } 
 
-                    // if (new_edges == target_new_edges - 1) {
-                    //     route[2].cost_ = route[0].cost_;
-                    //     route[2].route_ = route[0].route_;
-                    //     if (use_ls) {
-                    //         route[2].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
-                    //     }
-                    // } 
+                    if (new_edges == target_new_edges - 1) {
+                        route[2].cost_ = route[0].cost_;
+                        route[2].route_ = route[0].route_;
+                        if (use_ls) {
+                            route[2].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                        }
+                    } 
                 }
 
                 if (use_ls) {
