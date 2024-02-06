@@ -285,7 +285,7 @@ public:
                                            p_best_, rho_, solution_cost);
     }
 
-    void update_trail_limits_smooth(double solution_cost) {
+    void update_trail_limits_smooth() {
         trail_limits_.max_ = 1.0;
         trail_limits_.min_ = tau_min_;
     }
