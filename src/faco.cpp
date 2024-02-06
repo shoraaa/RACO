@@ -1675,7 +1675,7 @@ run_raco(const ProblemInstance &problem,
                 auto curr_node = start_node;
                 uint32_t visited_count = 1;
 
-                while (new_edges < target_new_edges) {
+                while (new_edges < target_new_edges && visited_count < dimension) {
                     auto curr = curr_node;
 
                     auto nn_list = problem.get_nearest_neighbors(curr, cl_size);
