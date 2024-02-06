@@ -861,8 +861,7 @@ class Route {
 public:
     using CostFunction = std::function<double (uint32_t, uint32_t)>;
 
-    Route() = default;
-    
+
     Route(std::vector<uint32_t> route, CostFunction fn)
         : route_(route),
           cost_fn_(fn)
@@ -1022,7 +1021,7 @@ public:
      * of the new edges should be inserted into checklist.
      */
     void two_opt_nn(const ProblemInstance &instance,
-                    std::vector<uint32_t> checklist,
+                    std::vector<uint32_t> &checklist,
                     uint32_t nn_list_size) {
 
         // We assume symmetry so that the order of the nodes does not matter
@@ -1656,12 +1655,11 @@ run_raco(const ProblemInstance &problem,
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
-                const auto target_new_edges = opt.min_new_edges_ + 1; // [-1,1]
+                const auto target_new_edges = opt.min_new_edges_;
 
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
-                Route route[3];  // We use "external" route and only copy it back to ant
-                route[0] = local_source;
+                Route route { local_source };  // We use "external" route and only copy it back to ant
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -1684,7 +1682,7 @@ run_raco(const ProblemInstance &problem,
                     auto nn = *nn_list.begin();
                     bool greed = get_rng().next_float() < opt.p_greed_;
                     if (opt.force_new_edge_) {
-                        visited.set_bit(route[0].get_succ(curr));
+                        visited.set_bit(route.get_succ(curr));
                         greed |= !visited.is_set(nn);
                     }
 
@@ -1695,14 +1693,14 @@ run_raco(const ProblemInstance &problem,
                                                 curr,
                                                 visited);
 
-                    const auto sel_pred = route[0].get_pred(sel);
+                    const auto sel_pred = route.get_pred(sel);
 
                     // ant.visit(sel);
                     visited.set_bit(sel);
                     ++visited_count;
-                    route[0].relocate_node(curr, sel);  // Place sel node just after curr node
+                    route.relocate_node(curr, sel);  // Place sel node just after curr node
 
-                    assert(route[0].get_succ(curr) == sel);  // We should have (curr, sel) edge
+                    assert(route.get_succ(curr) == sel);  // We should have (curr, sel) edge
 
                     if (!local_source.contains_edge(curr, sel)) {
                         /*
@@ -1721,52 +1719,37 @@ run_raco(const ProblemInstance &problem,
                         if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
                     }
                     curr_node = sel;
+                }
 
-                    if (new_edges == target_new_edges - 2) {
-                        route[1] = route[0];
-                        if (use_ls) {
-                            route[1].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
-                        }
-                    } 
-
-                    if (new_edges == target_new_edges - 1) {
-                        route[2] = route[0];
-                        if (use_ls) {
-                            route[2].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
-                        }
-                    } 
+                if (opt.count_new_edges_) {  // How many new edges are in the new sol. actually?
+                    total_new_edges += count_diff_edges(route, local_source);
                 }
 
                 if (use_ls) {
-                    route[0].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                    route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                 }
-
-                uint32_t best_route = 0;
-                if (route[1].cost_ < route[0].cost_) best_route = 1;
-                if (route[2].cost_ < route[best_route].cost_) best_route = 2;
-
 
                 // No need to recalculate route length -- we are updating it along with the changes
                 // resp. to the current local source solution
                 // ant.cost_ = problem.calculate_route_length(route.route_);
-                // assert( abs(problem.calculate_route_length(route[0].route_) - route[0].cost_) < 1e-6 );
+                assert( abs(problem.calculate_route_length(route.route_) - route.cost_) < 1e-6 );
 
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
                 if (!opt.keep_better_ant_sol_ 
-                        || (opt.keep_better_ant_sol_ && route[best_route].cost_ < ant.cost_)) {
-                    ant.cost_  = route[best_route].cost_;
-                    ant.route_ = route[best_route].route_;
+                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
+                    ant.cost_  = route.cost_;
+                    ant.route_ = route.route_;
 
                     ++ant_sol_updates;
                 }
 
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
-                if (opt.source_sol_local_update_ && ant.cost_ < local_source.cost_) {
-                    local_source = Route{ ant.route_, problem.get_distance_fn() };
-                    local_source.cost_ = ant.cost_;
+                if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
+                    local_source = Route{ route.route_, problem.get_distance_fn() };
+                    local_source.cost_ = route.cost_;
 
                     ++local_source_sol_updates;
                 }
@@ -1784,8 +1767,8 @@ run_raco(const ProblemInstance &problem,
                 if (iteration_best->cost_ < best_ant->cost_) {
                     best_ant->update(iteration_best->route_, iteration_best->cost_);
 
-                    auto error = problem.calc_relative_error(best_ant->cost_);
-                    best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
+                    // auto error = problem.calc_relative_error(best_ant->cost_);
+                    // best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
                 }
 
                 if (iteration % 1000 == 0) {
