@@ -1659,8 +1659,8 @@ run_raco(const ProblemInstance &problem,
 
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
-                Route route[3] = { local_source, local_source, local_source };  // We use "external" route and only copy it back to ant
-
+                Route route[3];  // We use "external" route and only copy it back to ant
+                route[0] = local_source;
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -1722,14 +1722,14 @@ run_raco(const ProblemInstance &problem,
                     curr_node = sel;
 
                     if (new_edges == target_new_edges - 2) {
-                        route[1].update(route[0]);
+                        route[1] = route[0];
                         if (use_ls) {
                             route[1].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                         }
                     } 
 
                     if (new_edges == target_new_edges - 1) {
-                        route[2].update(route[0]);
+                        route[2] = route[0];
                         if (use_ls) {
                             route[2].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                         }
