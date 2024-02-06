@@ -1681,6 +1681,10 @@ run_raco(const ProblemInstance &problem,
                     auto nn_list = problem.get_nearest_neighbors(curr, cl_size);
                     auto nn = *nn_list.begin();
                     bool greed = get_rng().next_float() < opt.p_greed_;
+                    if (opt.force_new_edge_) {
+                        visited.set_bit(route.get_succ(curr));
+                        greed |= !visited.is_set(nn);
+                    }
 
                     auto sel = greed ? nn : select_next_node(pheromone, heuristic,
                                                 nn_list,
@@ -1765,8 +1769,6 @@ run_raco(const ProblemInstance &problem,
 
                     // auto error = problem.calc_relative_error(best_ant->cost_);
                     // best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
-
-                    // model.update_trail_limits_smooth(best_ant->cost_);
                 }
 
                 if (iteration % 1000 == 0) {

@@ -110,6 +110,8 @@ ProgramOptions parse_program_options(int argc, char *argv[]) {
 
     p.add("p-greed", "Prob to greedily selected the nearest vertice", opts.p_greed_);
 
+    p.add("force-new-edge", "Should we force the new edge to be choose?", opts.force_new_edge_);
+
     p.parse(argc, argv);
 
     return opts;

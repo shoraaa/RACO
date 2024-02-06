@@ -75,6 +75,9 @@ struct ProgramOptions {
 
     // Restricted ACO -- Prob to greedily selected the nearest vertice
     double p_greed_ = 0.5;
+
+    // Restricted ACO -- should we force the new edge to be choose?
+    int32_t force_new_edge_ = 1;
 };
 
 
@@ -105,6 +108,7 @@ void dump(const ProgramOptions &opt, MapT &map) {
     map["count new edges"] = opt.count_new_edges_;
 
     map["p greed"] = opt.p_greed_;
+    map["force new edge"] = opt.force_new_edge_;
 }
 
 ProgramOptions parse_program_options(int argc, char *argv[]);
