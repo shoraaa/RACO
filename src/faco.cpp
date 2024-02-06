@@ -1722,16 +1722,14 @@ run_raco(const ProblemInstance &problem,
                     curr_node = sel;
 
                     if (new_edges == target_new_edges - 2) {
-                        route[1] = Route{ route[0].route_, problem.get_distance_fn() };
-                        route[1].cost_ = route[0].cost_;
+                        route[1].update(route[0]);
                         if (use_ls) {
                             route[1].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                         }
                     } 
 
                     if (new_edges == target_new_edges - 1) {
-                        route[2] = Route{ route[0].route_, problem.get_distance_fn() };
-                        route[2].cost_ = route[0].cost_;
+                        route[2].update(route[0]);
                         if (use_ls) {
                             route[2].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                         }
