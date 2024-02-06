@@ -1,4 +1,4 @@
-CXX      = g++-11
+CXX      = g++
 CXXFLAGS_COMMON = -std=c++17 -Wall -Wpedantic -Wextra -fexceptions -fopenmp
 
 # Change to debug to compile with debugging flags

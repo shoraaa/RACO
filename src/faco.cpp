@@ -1551,7 +1551,7 @@ run_mfaco(const ProblemInstance &problem,
 
 template<typename ComputationsLog_t>
 std::unique_ptr<Solution> 
-run_mfaco(const ProblemInstance &problem,
+run_raco(const ProblemInstance &problem,
                 const ProgramOptions &opt,
                 ComputationsLog_t &comp_log) {
 
@@ -1889,6 +1889,13 @@ int main(int argc, char *argv[]) {
 
             if (args.ants_count_ == 0) {
                 args.ants_count_ = problem.dimension_;
+            }
+        } else if (args.algorithm_ == "raco") {
+            alg = run_raco;
+
+            if (args.ants_count_ == 0) {
+                auto r = 4 * sqrt(problem.dimension_);
+                args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
             }
         }
 
