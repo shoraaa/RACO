@@ -1721,21 +1721,21 @@ run_raco(const ProblemInstance &problem,
                     }
                     curr_node = sel;
 
-                    if (new_edges == target_new_edges - 2) {
-                        route[1].cost_ = route[0].cost_;
-                        route[1].route_ = route[0].route_;
-                        if (use_ls) {
-                            route[1].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
-                        }
-                    } 
+                    // if (new_edges == target_new_edges - 2) {
+                    //     route[1].cost_ = route[0].cost_;
+                    //     route[1].route_ = route[0].route_;
+                    //     if (use_ls) {
+                    //         route[1].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                    //     }
+                    // } 
 
-                    if (new_edges == target_new_edges - 1) {
-                        route[2].cost_ = route[0].cost_;
-                        route[2].route_ = route[0].route_;
-                        if (use_ls) {
-                            route[2].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
-                        }
-                    } 
+                    // if (new_edges == target_new_edges - 1) {
+                    //     route[2].cost_ = route[0].cost_;
+                    //     route[2].route_ = route[0].route_;
+                    //     if (use_ls) {
+                    //         route[2].two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                    //     }
+                    // } 
                 }
 
                 if (use_ls) {
@@ -1743,8 +1743,8 @@ run_raco(const ProblemInstance &problem,
                 }
 
                 uint32_t best_route = 0;
-                if (route[1].cost_ < route[0].cost_) best_route = 1;
-                if (route[2].cost_ < route[best_route].cost_) best_route = 2;
+                // if (route[1].cost_ < route[0].cost_) best_route = 1;
+                // if (route[2].cost_ < route[best_route].cost_) best_route = 2;
 
 
                 // No need to recalculate route length -- we are updating it along with the changes
