@@ -108,6 +108,8 @@ ProgramOptions parse_program_options(int argc, char *argv[]) {
 
     p.add("count-new-edges", "Should the actual # of new edges be checked", opts.count_new_edges_);
 
+    p.add("p-greed", "Prob to greedily selected the nearest vertice", opts.p_greed_);
+
     p.parse(argc, argv);
 
     return opts;

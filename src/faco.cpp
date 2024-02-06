@@ -1677,8 +1677,13 @@ run_raco(const ProblemInstance &problem,
 
                 while (new_edges < target_new_edges && visited_count < dimension) {
                     auto curr = curr_node;
+
+                    auto nn_list = problem.get_nearest_neighbors(curr, cl_size);
+                    auto nn = *nn_list.begin();
+                    bool greed = get_rng().next_float() < opt.p_greed_;
+
                     auto sel = select_next_node(pheromone, heuristic,
-                                                problem.get_nearest_neighbors(curr, cl_size),
+                                                nn_list,
                                                 nn_product_cache,
                                                 problem.get_backup_neighbors(curr, cl_size, bl_size),
                                                 curr,

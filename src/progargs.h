@@ -72,6 +72,9 @@ struct ProgramOptions {
     // Modified FACO -- should the actual # of new edges in the constructed
     // solutions be checked?
     int32_t count_new_edges_ = 0;
+
+    // Restricted ACO -- Prob to greedily selected the nearest vertice
+    double p_greed_ = 0.5;
 };
 
 
@@ -100,6 +103,8 @@ void dump(const ProgramOptions &opt, MapT &map) {
     map["keep better ant sol"] = opt.keep_better_ant_sol_;
     map["source sol local update"] = opt.source_sol_local_update_;
     map["count new edges"] = opt.count_new_edges_;
+
+    map["p greed"] = opt.p_greed_;
 }
 
 ProgramOptions parse_program_options(int argc, char *argv[]);
