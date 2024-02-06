@@ -12,6 +12,7 @@
 #include <cassert>
 #include <cmath>
 #include <string>
+#include <functional>
 
 #include "kd_tree.h"
 #include "utils.h"
