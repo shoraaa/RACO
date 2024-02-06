@@ -94,6 +94,8 @@ ProgramOptions parse_program_options(int argc, char *argv[]) {
 
     p.add("rho", "How much of the pheromone remains after evaporation", opts.rho_);
 
+    p.add("tau-min", "Minimum pheromone for SMMAS algorithm", opts.tau_min_);
+
     p.add("seed", "Initial Random seed", opts.seed_);
 
     p.add("r,repeat", "How many trials should be executed", opts.repeat_);

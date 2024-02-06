@@ -47,6 +47,9 @@ struct ProgramOptions {
     // How much of the pheromone remains after a single evaporation event
     double rho_ = 0.5;
 
+    // minimum rho for smmas
+    double tau_min_ = 0.1;
+
     // Should a picture of the solution (route) be stored into SVG file?
     bool save_route_picture_ = true;
 
@@ -89,6 +92,7 @@ void dump(const ProgramOptions &opt, MapT &map) {
     map["problem"] = opt.problem_path_;
     map["results dir"] = opt.results_dir_;
     map["rho"] = opt.rho_;
+    map["tau min"] = opt.tau_min_;
     map["seed"] = opt.seed_;
     map["picture"] = opt.save_route_picture_;
     map["repeat"] = opt.repeat_;
