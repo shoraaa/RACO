@@ -2371,19 +2371,10 @@ run_rbaco(const ProblemInstance &problem,
                         abort();
                     }
 
-                    for (auto& node : route.route_) {
-                        if (visited.is_set(node)) {
-                            cerr << "node not cleared: " << node;
-                            abort();
-                        }
-                    }
-
                 }
 
-                route = FastRoute{ local_source.route_, problem.get_distance_fn() };
-                route.cost_ = local_source.cost_;
                 auto curr = best_start;
-                for (auto& sel : changes) {
+                for (auto& sel : best_changes) {
                     route.relocate_node(curr, sel);
                     curr = sel;
                 }
