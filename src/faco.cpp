@@ -1567,23 +1567,22 @@ public:
     }
 
     void relocate_node(uint32_t target, uint32_t node) {
-        cerr << "relocate shit\n";
-
-        if (succ_[target] = node) { cerr << "how did this happen? " << target << ' ' << node; abort(); return; }
+        
+        if (succ_[target] == node) { return ; }
 
         const auto node_pred = pred_[node];
         const auto node_succ = succ_[node];
         const auto target_succ = succ_[target];
 
-        cerr << "remove: " << node_pred << ' ' << node << '\n';
-        cerr << "remove: " << node << ' ' << node_succ << '\n';
-        cerr << "remove: " << target << ' ' << target_succ << '\n';
+        // cerr << "remove: " << node_pred << ' ' << node << '\n';
+        // cerr << "remove: " << node << ' ' << node_succ << '\n';
+        // cerr << "remove: " << target << ' ' << target_succ << '\n';
 
-        cerr << "add: " << node_pred << ' ' << node_succ << '\n';
-        cerr << "add: " << target << ' ' << node << '\n';
-        cerr << "add: " << node << ' ' << target_succ << '\n';
+        // cerr << "add: " << node_pred << ' ' << node_succ << '\n';
+        // cerr << "add: " << target << ' ' << node << '\n';
+        // cerr << "add: " << node << ' ' << target_succ << '\n';
 
-        cerr << "old cost: " << cost_ << '\n';
+        // cerr << "old cost: " << cost_ << '\n';
 
         succ_[node_pred] = node_succ; 
         pred_[node_succ] = node_pred;
@@ -1603,7 +1602,7 @@ public:
                  + cost_fn_(target, node)
                  + cost_fn_(node, target_succ);
 
-        cerr << "new cost: " << cost_ << '\n';
+        // cerr << "new cost: " << cost_ << '\n';
     }
 
     void revert_change(uint32_t target, uint32_t node, uint32_t node_pred_) {
@@ -1991,7 +1990,7 @@ run_raco(const ProblemInstance &problem,
                     // auto nn = *nn_list.begin();
                     // bool greed = get_rng().next_float() < opt.p_greed_;
                     if (opt.force_new_edge_) {
-                        cerr << route.succ_[curr] << " get set cuz force.\n";
+                        // cerr << route.succ_[curr] << " get set cuz force.\n";
                         visited.set_bit(route.succ_[curr]);
                         // greed |= !visited.is_set(nn);
                     }
@@ -2004,7 +2003,7 @@ run_raco(const ProblemInstance &problem,
                                                 visited);
 
                     const auto sel_pred = route.pred_[sel];
-                    cerr << sel_pred << " is the selected prec.\n";
+                    // cerr << sel_pred << " is the selected prec.\n";
 
                     // ant.visit(sel);
                     visited.set_bit(sel);
