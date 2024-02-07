@@ -49,7 +49,7 @@ struct MatrixPheromone {
 
         #pragma omp for schedule(static)
         for (size_t i = 0; i < n; ++i) {
-            trails_[i] = std::max(min_pheromone_value, trails_[i] * (1 - evaporation_rate) + delta);
+            trails_[i] = trails_[i] * (1 - evaporation_rate) + delta;
         }
     }
 
@@ -151,21 +151,16 @@ struct CandListPheromone {
                                             min_pheromone_value);
     }
 
-    void evaporate_smooth(double evaporation_rate, double min_pheromone_value) {
+    void evaporate(double evaporation_rate) {
         const auto n = trails_.size();
 
         #pragma omp for schedule(static)
         for (size_t i = 0; i < n; ++i) {
-            if (trails_[i] * (1 - evaporation_rate) + delta < min_pheromone_value) {
-                std::cerr << "wrong!! " << trails_[i] << ' ' << delta << ' ' << trails_[i] * (1 - evaporation_rate) + delta << ' ' << min_pheromone_value << '\n';
-                abort();
-            }
-            trails_[i] = std::max(min_pheromone_value, trails_[i] * (1 - evaporation_rate) + delta);
+            trails_[i] = trails_[i] * (1 - evaporation_rate) + delta;
         }
 
         #pragma omp single
-        default_pheromone_value_ = std::max(default_pheromone_value_ * (1 - evaporation_rate) + delta,
-                                            min_pheromone_value);
+        default_pheromone_value_ = default_pheromone_value_ * (1 - evaporation_rate) + delta;
     }
 
     void set_all_trails(double pheromone_value) {
