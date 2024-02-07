@@ -1827,6 +1827,7 @@ run_raco(const ProblemInstance &problem,
     comp_log("ants solutions updates", ant_sol_updates);
     comp_log("local source solutions updates", local_source_sol_updates);
     comp_log("total new edges", total_new_edges);
+    comp_log("tour construction time", construction_time);
 
     return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
 }
