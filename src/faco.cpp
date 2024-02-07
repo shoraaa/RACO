@@ -1984,7 +1984,7 @@ run_raco(const ProblemInstance &problem,
                     // bool greed = get_rng().next_float() < opt.p_greed_;
                     if (opt.force_new_edge_) {
                         // cerr << route.succ_[curr] << " get set cuz force.\n";
-                        visited.set_bit(route.succ_[curr]);
+                        visited.set_bit(route.get_succ(curr));
                         // greed |= !visited.is_set(nn);
                     }
 
@@ -1995,7 +1995,7 @@ run_raco(const ProblemInstance &problem,
                                                 curr,
                                                 visited);
 
-                    const auto sel_pred = route.pred_[sel];
+                    const auto sel_pred = route.get_pred(sel);
                     // cerr << sel_pred << " is the selected prec.\n";
 
                     // ant.visit(sel);
