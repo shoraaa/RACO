@@ -1570,7 +1570,7 @@ public:
         
         if (succ_[target] == node) { 
             cerr << "error in relocate: ";
-            cerr << target << ' ' << node << '\n';
+            cerr << target << ' ' << node << ' ' << succ_[target] << ' ' << pred_[node] << '\n';
             abort();
         }
 
