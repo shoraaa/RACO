@@ -2374,7 +2374,7 @@ run_rbaco(const ProblemInstance &problem,
                     for (auto& node : route.route_) {
                         if (visited.is_set(node)) {
                             cerr << "node not cleared: " << node;
-                            abort(0);
+                            abort();
                         }
                     }
 
