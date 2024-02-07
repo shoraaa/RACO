@@ -1569,7 +1569,7 @@ public:
     void relocate_node(uint32_t target, uint32_t node) {
         cerr << "relocate shit\n";
 
-        if (succ_[target] = node) { return ; cerr << "how did this happen? " << target << ' ' << node; abort(); }
+        if (succ_[target] = node) { cerr << "how did this happen? " << target << ' ' << node; abort(); return; }
 
         const auto node_pred = pred_[node];
         const auto node_succ = succ_[node];
