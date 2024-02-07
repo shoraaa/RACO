@@ -2331,6 +2331,10 @@ run_rbaco(const ProblemInstance &problem,
                     for (int32_t i = static_cast<int32_t>(changes.size()) - 1; ~i; --i) {
                         auto sel = changes[i], sel_pred = sel_pred_[i];
                         auto curr = i == 0 ? start_node : changes[i - 1];
+
+                        if (opt.force_new_edge_) {
+                            visited.clear_bit(route.succ_[curr]);
+                        }
                         visited.clear_bit(sel);
 
                         route.revert_change(curr, sel, sel_pred);
