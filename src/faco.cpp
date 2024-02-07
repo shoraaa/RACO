@@ -2273,7 +2273,9 @@ run_rbaco(const ProblemInstance &problem,
 
                     visited.set_bit(start_node);
 
+                    changes.clear();
                     ls_checklist.clear();
+                    sel_pred_.clear();
 
                     // We are counting edges (undirected) that are not present in
                     // the source_route. The factual # of new edges can be +1 as we
