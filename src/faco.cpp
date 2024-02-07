@@ -1590,7 +1590,7 @@ run_raco(const ProblemInstance &problem,
     // smaller -- we use calc_trail_limits_cl instead of calc_trail_limits
     model.calc_trail_limits_ = !use_ls ? calc_trail_limits : calc_trail_limits_cl;
     model.init(initial_cost);
-    //model.update_trail_limits_smooth();
+    model.update_trail_limits_smooth();
     auto &pheromone = model.get_pheromone();
     pheromone.set_all_trails(model.trail_limits_.max_);
 
@@ -1767,16 +1767,14 @@ run_raco(const ProblemInstance &problem,
                 if (iteration_best->cost_ < best_ant->cost_) {
                     best_ant->update(iteration_best->route_, iteration_best->cost_);
 
-                    model.update_trail_limits(best_ant->cost_);
+                    // auto error = problem.calc_relative_error(best_ant->cost_);
+                    // best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
+                }
 
+                if (iteration % 1000 == 0) {
                     auto error = problem.calc_relative_error(best_ant->cost_);
                     best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
                 }
-
-                // if (iteration % 1000 == 0) {
-                //     auto error = problem.calc_relative_error(best_ant->cost_);
-                //     best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
-                // }
 
                 mean_cost_trace.add(round(sample_mean(sol_costs), 1), iteration);
                 stdev_cost_trace.add(round(sample_stdev(sol_costs), 1), iteration);
@@ -1785,8 +1783,7 @@ run_raco(const ProblemInstance &problem,
             // Synchronize threads before pheromone update
             #pragma omp barrier
 
-            // model.evaporate_pheromone_smooth();
-            model.evaporate_pheromone();
+            model.evaporate_pheromone_smooth();
 
             #pragma omp master
             {
@@ -1797,8 +1794,7 @@ run_raco(const ProblemInstance &problem,
 
                 // Increase pheromone values on the edges of the new
                 // source_solution
-                // model.deposit_pheromone_smooth(update_ant);
-                 model.deposit_pheromone(update_ant);
+                model.deposit_pheromone_smooth(update_ant);
 
                 pher_deposition_time += omp_get_wtime() - start;
 
