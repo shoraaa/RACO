@@ -2327,7 +2327,7 @@ run_rbaco(const ProblemInstance &problem,
                     }
                     construction_time += omp_get_wtime() - start_cs;
 
-                    if (route.cost_ < best_cost) {
+                    if (route.cost_ > best_cost) {
                         best_cost = route.cost_;
                         best_changes = changes;
                         best_ls_checklist = ls_checklist;
