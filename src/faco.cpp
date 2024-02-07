@@ -1568,7 +1568,11 @@ public:
 
     void relocate_node(uint32_t target, uint32_t node) {
         
-        if (succ_[target] == node) { return ; }
+        if (succ_[target] == node) { 
+            cerr << "error in relocate: ";
+            cerr << target << ' ' << node << '\n';
+            abort();
+        }
 
         const auto node_pred = pred_[node];
         const auto node_succ = succ_[node];
@@ -1606,7 +1610,11 @@ public:
     }
 
     void revert_change(uint32_t target, uint32_t node, uint32_t node_pred_) {
-        if (target == node_pred_) { return ; }
+        if (target == node_pred_) {
+            cerr << "error in revert: ";
+            cerr << target << ' ' << node << '\n';
+            abort();
+        }
 
         const auto node_pred = node_pred_;
         const auto node_succ = succ_[node_pred];
