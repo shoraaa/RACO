@@ -1626,6 +1626,7 @@ run_raco(const ProblemInstance &problem,
     int32_t total_new_edges = 0;
 
     double construction_time = 0;
+    double ls_time = 0;
 
     #pragma omp parallel default(shared)
     {
@@ -1659,7 +1660,7 @@ run_raco(const ProblemInstance &problem,
             // threads scheduling. With "static" the computations always follow
             // the same path -- i.e. if we run the program with the same PRNG
             // seed (--seed X) then we get exactly the same results.
-            #pragma omp for schedule(static, 1) reduction(+ : construction_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
+            #pragma omp for schedule(static, 1) reduction(+ : construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
@@ -1734,7 +1735,9 @@ run_raco(const ProblemInstance &problem,
                 }
 
                 if (use_ls) {
+                    double start = omp_get_wtime();
                     route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                    ls_time += omp_get_wtime() - start;
                 }
 
                 // No need to recalculate route length -- we are updating it along with the changes
@@ -1827,6 +1830,7 @@ run_raco(const ProblemInstance &problem,
     comp_log("local source solutions updates", local_source_sol_updates);
     comp_log("total new edges", total_new_edges);
     comp_log("tour construction time", construction_time);
+    comp_log("local search time", ls_time);
 
     return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
 }
