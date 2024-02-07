@@ -297,7 +297,7 @@ public:
     }
 
     void evaporate_pheromone_smooth() {
-        get_pheromone().evaporate_smooth(1 - rho_,, trail_limits_.min_);
+        get_pheromone().evaporate_smooth(1 - rho_, trail_limits_.min_);
     }
 
     decltype(auto) get_pheromone() {
