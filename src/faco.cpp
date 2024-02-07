@@ -1626,6 +1626,8 @@ run_raco(const ProblemInstance &problem,
     int32_t local_source_sol_updates = 0;
     int32_t total_new_edges = 0;
 
+    double construction_time = 0;
+
     #pragma omp parallel default(shared)
     {
         // Endpoints of new edges (not present in source_route) are inserted
@@ -1658,7 +1660,7 @@ run_raco(const ProblemInstance &problem,
             // threads scheduling. With "static" the computations always follow
             // the same path -- i.e. if we run the program with the same PRNG
             // seed (--seed X) then we get exactly the same results.
-            #pragma omp for schedule(static, 1) reduction(+ : ant_sol_updates, local_source_sol_updates, total_new_edges)
+            #pragma omp for schedule(static, 1) reduction(+ : construction_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
@@ -1680,6 +1682,7 @@ run_raco(const ProblemInstance &problem,
                 auto curr_node = start_node;
                 uint32_t visited_count = 1;
 
+                double start_cs = omp_get_wtime();
                 while (new_edges < target_new_edges && visited_count < dimension) {
                     auto curr = curr_node;
 
@@ -1725,6 +1728,7 @@ run_raco(const ProblemInstance &problem,
                     }
                     curr_node = sel;
                 }
+                construction_time += omp_get_wtime() - start_cs;
 
                 if (opt.count_new_edges_) {  // How many new edges are in the new sol. actually?
                     total_new_edges += count_diff_edges(route, local_source);
