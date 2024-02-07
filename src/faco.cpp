@@ -318,14 +318,13 @@ public:
         return deposit;
     }
 
-    double deposit_pheromone_smooth(const Ant &sol) {
+    void deposit_pheromone_smooth(const Ant &sol) {
         auto prev_node = sol.route_.back();
         auto &pheromone = get_pheromone();
         for (auto node : sol.route_) {
             pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
             prev_node = node;
         }
-        return deposit;
     }
 };
 
@@ -1593,7 +1592,7 @@ run_raco(const ProblemInstance &problem,
     model.init(initial_cost);
 
     if (opt.smooth_) {
-        model.update_trail_limits_smooth();
+        model.init_trail_limits_smooth();
     }
 
     auto &pheromone = model.get_pheromone();
