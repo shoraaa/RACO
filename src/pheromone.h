@@ -44,7 +44,7 @@ struct MatrixPheromone {
         }
     }
 
-    void evaporate_smooth(double evaporation_rate, double min_pheromone_value) {
+    void evaporate_smooth(double evaporation_rate) {
         const auto n = trails_.size();
 
         #pragma omp for schedule(static)
@@ -151,7 +151,7 @@ struct CandListPheromone {
                                             min_pheromone_value);
     }
 
-    void evaporate(double evaporation_rate) {
+    void evaporate_smooth(double evaporation_rate) {
         const auto n = trails_.size();
 
         #pragma omp for schedule(static)
