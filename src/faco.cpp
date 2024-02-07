@@ -2280,9 +2280,9 @@ run_rbaco(const ProblemInstance &problem,
                 auto best_cost = numeric_limits<double>::max();
                 auto best_start = -1;
 
-                while (sub_ants--) {                
+                FastRoute route { local_source };  // We use "external" route and only copy it back to ant
 
-                    FastRoute route { local_source };  // We use "external" route and only copy it back to ant
+                while (sub_ants--) {                
 
                     auto start_node = get_rng().next_uint32(dimension);
 
