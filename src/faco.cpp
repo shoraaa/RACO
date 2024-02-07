@@ -1593,6 +1593,7 @@ run_raco(const ProblemInstance &problem,
 
     if (opt.smooth_) {
         model.init_trail_limits_smooth();
+        cout << "Using SMMAS: " << model.trail_limits_.min_ << '\n';
     }
 
     auto &pheromone = model.get_pheromone();
