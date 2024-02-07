@@ -47,9 +47,6 @@ struct ProgramOptions {
     // How much of the pheromone remains after a single evaporation event
     double rho_ = 0.5;
 
-    // minimum rho for smmas
-    double tau_min_ = 0.1;
-
     // Should a picture of the solution (route) be stored into SVG file?
     bool save_route_picture_ = true;
 
@@ -78,6 +75,12 @@ struct ProgramOptions {
 
     // Restricted ACO -- should we force the new edge to be choose?
     int32_t force_new_edge_ = 1;
+
+    // Restricted ACO -- should we use smoothen pheromone update?
+    int32_t smooth_ = 1;
+
+    // Restricted ACO -- minimum rho for smmas
+    double tau_min_ = 0.1;
 };
 
 
@@ -98,7 +101,6 @@ void dump(const ProgramOptions &opt, MapT &map) {
     map["problem"] = opt.problem_path_;
     map["results dir"] = opt.results_dir_;
     map["rho"] = opt.rho_;
-    map["tau min"] = opt.tau_min_;
     map["seed"] = opt.seed_;
     map["picture"] = opt.save_route_picture_;
     map["repeat"] = opt.repeat_;
@@ -109,6 +111,8 @@ void dump(const ProgramOptions &opt, MapT &map) {
 
     map["p greed"] = opt.p_greed_;
     map["force new edge"] = opt.force_new_edge_;
+    map["smooth"] = opt.smooth_;
+    map["tau min"] = opt.tau_min_;
 }
 
 ProgramOptions parse_program_options(int argc, char *argv[]);

@@ -94,8 +94,6 @@ ProgramOptions parse_program_options(int argc, char *argv[]) {
 
     p.add("rho", "How much of the pheromone remains after evaporation", opts.rho_);
 
-    p.add("tau-min", "Minimum pheromone for SMMAS algorithm", opts.tau_min_);
-
     p.add("seed", "Initial Random seed", opts.seed_);
 
     p.add("r,repeat", "How many trials should be executed", opts.repeat_);
@@ -111,6 +109,10 @@ ProgramOptions parse_program_options(int argc, char *argv[]) {
     p.add("p-greed", "Prob to greedily selected the nearest vertice", opts.p_greed_);
 
     p.add("force-new-edge", "Should we force the new edge to be choose?", opts.force_new_edge_);
+
+    p.add("smooth", "should we use smoothen pheromone update?", opts.smooth_);
+
+    p.add("tau-min", "Minimum pheromone for SMMAS algorithm", opts.tau_min_);
 
     p.parse(argc, argv);
 
