@@ -2332,12 +2332,14 @@ run_rbaco(const ProblemInstance &problem,
                         auto sel = changes[i], sel_pred = sel_pred_[i];
                         auto curr = i == 0 ? start_node : changes[i - 1];
 
+                        route.revert_change(curr, sel, sel_pred);
+
+                        visited.clear_bit(sel);
+
                         if (opt.force_new_edge_) {
                             visited.clear_bit(route.succ_[curr]);
                         }
-                        visited.clear_bit(sel);
 
-                        route.revert_change(curr, sel, sel_pred);
                     }
                     visited.clear_bit(start_node);
 
