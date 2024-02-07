@@ -289,7 +289,7 @@ public:
     void init_trail_limits_smooth() {
         trail_limits_.max_ = 1.0;
         trail_limits_.min_ = tau_min_; // problem.dimension_
-        deposit_smooth_ = rho_ * (trail_limits_.max_ - trail_limits_.min_);
+        deposit_smooth_ = rho_ * (trail_limits_.max_ - tau_min_);
         get_pheromone().init_smooth(-rho_ * tau_min_);
     }
     void evaporate_pheromone() {
@@ -297,7 +297,7 @@ public:
     }
 
     void evaporate_pheromone_smooth() {
-        get_pheromone().evaporate_smooth(1 - rho_);
+        get_pheromone().evaporate_smooth(1 - rho_,, trail_limits_.min_);
     }
 
     decltype(auto) get_pheromone() {
