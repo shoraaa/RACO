@@ -2365,6 +2365,11 @@ run_rbaco(const ProblemInstance &problem,
 
                     }
                     visited.clear_bit(start_node);
+                    
+                    if (route.route_ != local_source.route_) {
+                        cerr << "incorrect revert!!\n";
+                        abort();
+                    }
 
                 }
 
