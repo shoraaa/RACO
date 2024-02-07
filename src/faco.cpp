@@ -2255,7 +2255,7 @@ run_rbaco(const ProblemInstance &problem,
             #pragma omp for schedule(static, 1) reduction(+ : construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
-                const auto sub_ants = opt.sub_ants_;
+                auto sub_ants = opt.sub_ants_;
 
                 auto &ant = ants[ant_idx];
                 visited.clear();
@@ -2337,6 +2337,9 @@ run_rbaco(const ProblemInstance &problem,
 
                 }
 
+                // simulate the best changes
+                FastRoute route { local_source };
+
                 auto curr = best_start;
                 for (auto& sel : changes) {
                     route.relocate_node(curr, sel);
@@ -2364,7 +2367,7 @@ run_rbaco(const ProblemInstance &problem,
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
                 if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
-                    local_source = Route{ route.route_, problem.get_distance_fn() };
+                    local_source = FastRoute{ route.route_, problem.get_distance_fn() };
                     local_source.cost_ = route.cost_;
 
                     ++local_source_sol_updates;
