@@ -2269,7 +2269,7 @@ run_rbaco(const ProblemInstance &problem,
 
                 best_changes.clear();
                 best_ls_checklist.clear();
-                auto best_cost = numeric_limits<double>::max();
+                auto best_cost = numeric_limits<double>::min();
                 auto best_start = -1;
 
                 FastRoute route { local_source };  // We use "external" route and only copy it back to ant
