@@ -80,7 +80,7 @@ struct ProgramOptions {
     int32_t smooth_ = 1;
 
     // Restricted ACO -- minimum rho for smmas
-    double tau_min_ = 0.1;
+    double tau_min_ = 0;
 };
 
 
