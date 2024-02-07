@@ -2570,7 +2570,7 @@ int main(int argc, char *argv[]) {
             Timer execution_timer;
             auto result = alg(problem, args, exlog);
 
-            if (abs(problem.calculate_route_length(result->route_) - result->cost_) < 1e-6) {
+            if ( abs( problem.calculate_route_length(result->route_) - result->cost_ ) > 1e-6) {
                 cerr << "wrong route?: " << problem.calculate_route_length(result->route_) << ' ' << result->cost_ << '\n';
                 abort();
             }
