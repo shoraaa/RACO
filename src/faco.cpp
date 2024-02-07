@@ -1697,7 +1697,7 @@ run_raco(const ProblemInstance &problem,
                         // greed |= !visited.is_set(nn);
                     }
 
-                    auto sel = greed ? nn : select_next_node(pheromone, heuristic,
+                    auto sel = select_next_node(pheromone, heuristic,
                                                 problem.get_nearest_neighbors(curr, cl_size), //nn_list,
                                                 nn_product_cache,
                                                 problem.get_backup_neighbors(curr, cl_size, bl_size),
