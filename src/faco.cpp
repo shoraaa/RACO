@@ -2313,6 +2313,7 @@ run_rbaco(const ProblemInstance &problem,
                         auto curr = curr_node;
 
                         if (opt.force_new_edge_) {
+                            cerr << "set " << route.succ_[curr] << '\n';
                             visited.set_bit(route.succ_[curr]);
                         }
 
