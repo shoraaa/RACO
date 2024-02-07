@@ -2360,9 +2360,6 @@ run_rbaco(const ProblemInstance &problem,
 
                 }
 
-                // simulate the best changes
-                FastRoute route { local_source };
-
                 auto curr = best_start;
                 for (auto& sel : changes) {
                     route.relocate_node(curr, sel);
