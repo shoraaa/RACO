@@ -2570,6 +2570,11 @@ int main(int argc, char *argv[]) {
             Timer execution_timer;
             auto result = alg(problem, args, exlog);
 
+            if (abs(problem.calculate_route_length(result->route_) - result->cost_) < 1e-6) {
+                cerr << "wrong route?: " << problem.calculate_route_length(result->route_) << ' ' << result->cost_ << '\n';
+                abort();
+            }
+
             exlog("execution time", execution_timer());
             exlog("finished_at", get_current_datetime_string("-", ":", "T", true));
             exlog("final cost", result->cost_);
