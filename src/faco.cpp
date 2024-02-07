@@ -1566,11 +1566,11 @@ public:
         }
     }
 
-    void relocate_node(uint32_t target, uint32_t node) {
+    void relocate_node(uint32_t target, uint32_t node, uint32_t target_succ_ = 0) {
         
         if (succ_[target] == node) { 
             cerr << "error in relocate: ";
-            cerr << target << ' ' << node << ' ' << succ_[target] << ' ' << pred_[node] << '\n';
+            cerr << target << ' ' << node << ' ' << target_succ_ << ' ' << succ_[target] << ' ' << pred_[node] << '\n';
             abort();
         }
 
@@ -2313,7 +2313,7 @@ run_rbaco(const ProblemInstance &problem,
                         auto curr = curr_node;
 
                         if (opt.force_new_edge_) {
-                            cerr << "set " << route.succ_[curr] << '\n';
+                            //cerr << "set " << route.succ_[curr] << '\n';
                             visited.set_bit(route.succ_[curr]);
                         }
 
@@ -2331,8 +2331,8 @@ run_rbaco(const ProblemInstance &problem,
 
                         visited.set_bit(sel);
                         ++visited_count;
-                        cerr << curr << ' ' << route.succ_[curr] << ' ' << sel << '\n';
-                        route.relocate_node(curr, sel);  
+                        //cerr << curr << ' ' << route.succ_[curr] << ' ' << sel << '\n';
+                        route.relocate_node(curr, sel, route.succ_[curr]);  
 
                         if (!local_source.contains_edge(curr, sel)) {
                             new_edges += 1;
