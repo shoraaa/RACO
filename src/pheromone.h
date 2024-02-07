@@ -156,6 +156,10 @@ struct CandListPheromone {
 
         #pragma omp for schedule(static)
         for (size_t i = 0; i < n; ++i) {
+            if (trails_[i] * (1 - evaporation_rate) + delta < min_pheromone_value) {
+                cerr << "wrong!! " << trails_[i] << ' ' << delta << ' ' << trails_[i] * (1 - evaporation_rate) + delta << ' ' << min_pheromone_value << '\n';
+                abort();
+            }
             trails_[i] = std::max(min_pheromone_value, trails_[i] * (1 - evaporation_rate) + delta);
         }
 
