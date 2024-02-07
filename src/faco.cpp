@@ -1569,24 +1569,12 @@ public:
     void relocate_node(uint32_t target, uint32_t node) {
         
         if (succ_[target] == node) { 
-            cerr << "error in relocate: ";
-            cerr << target << ' ' << node << ' ' << succ_[target] << ' ' << pred_[node] << '\n';
-            abort();
+            return;
         }
 
         const auto node_pred = pred_[node];
         const auto node_succ = succ_[node];
         const auto target_succ = succ_[target];
-
-        // cerr << "remove: " << node_pred << ' ' << node << '\n';
-        // cerr << "remove: " << node << ' ' << node_succ << '\n';
-        // cerr << "remove: " << target << ' ' << target_succ << '\n';
-
-        // cerr << "add: " << node_pred << ' ' << node_succ << '\n';
-        // cerr << "add: " << target << ' ' << node << '\n';
-        // cerr << "add: " << node << ' ' << target_succ << '\n';
-
-        // cerr << "old cost: " << cost_ << '\n';
 
         succ_[node_pred] = node_succ; 
         pred_[node_succ] = node_pred;
@@ -1606,14 +1594,11 @@ public:
                  + cost_fn_(target, node)
                  + cost_fn_(node, target_succ);
 
-        // cerr << "new cost: " << cost_ << '\n';
     }
 
     void revert_change(uint32_t target, uint32_t node, uint32_t node_pred_) {
         if (target == node_pred_) {
-            cerr << "error in revert: ";
-            cerr << target << ' ' << node << '\n';
-            abort();
+            return;
         }
 
         const auto node_pred = node_pred_;
@@ -1955,7 +1940,7 @@ run_raco(const ProblemInstance &problem,
                 }
             }
 
-            FastRoute local_source{ source_solution->route_, problem.get_distance_fn() };
+            Route local_source{ source_solution->route_, problem.get_distance_fn() };
             local_source.cost_ = source_solution->cost_;
 
             //Mask visited(dimension);
@@ -1972,7 +1957,7 @@ run_raco(const ProblemInstance &problem,
 
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
-                FastRoute route { local_source };  // We use "external" route and only copy it back to ant
+                Route route { local_source };  // We use "external" route and only copy it back to ant
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -2039,7 +2024,6 @@ run_raco(const ProblemInstance &problem,
                     curr_node = sel;
                 }
 
-                route.validate();
                 construction_time += omp_get_wtime() - start_cs;
 
                 if (opt.count_new_edges_) {  // How many new edges are in the new sol. actually?
@@ -2071,7 +2055,7 @@ run_raco(const ProblemInstance &problem,
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
                 if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
-                    local_source = FastRoute{ route.route_, problem.get_distance_fn() };
+                    local_source = Route{ route.route_, problem.get_distance_fn() };
                     local_source.cost_ = route.cost_;
 
                     ++local_source_sol_updates;
@@ -2365,12 +2349,6 @@ run_rbaco(const ProblemInstance &problem,
 
                     }
                     visited.clear_bit(start_node);
-                    
-                    if (route.route_ != local_source.route_) {
-                        cerr << "incorrect revert!!\n";
-                        abort();
-                    }
-
                 }
 
                 auto curr = best_start;
