@@ -114,6 +114,8 @@ ProgramOptions parse_program_options(int argc, char *argv[]) {
 
     p.add("tau-min", "Minimum pheromone for SMMAS algorithm", opts.tau_min_);
 
+    p.add("sub-ants", "number of sub ants", opts.sub_ants_);
+
     p.parse(argc, argv);
 
     return opts;

@@ -81,6 +81,9 @@ struct ProgramOptions {
 
     // Restricted ACO -- minimum rho for smmas
     double tau_min_ = -1;
+
+    // Restricted ACO -- number of sub ants
+    double sub_ants_ = 16;
 };
 
 
@@ -113,6 +116,7 @@ void dump(const ProgramOptions &opt, MapT &map) {
     map["force new edge"] = opt.force_new_edge_;
     map["smooth"] = opt.smooth_;
     map["tau min"] = opt.tau_min_;
+    map["sub ants"] = opt.sub_ants_;
 }
 
 ProgramOptions parse_program_options(int argc, char *argv[]);
