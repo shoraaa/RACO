@@ -2332,7 +2332,7 @@ run_rbaco(const ProblemInstance &problem,
                         visited.set_bit(sel);
                         ++visited_count;
                         //cerr << curr << ' ' << route.succ_[curr] << ' ' << sel << '\n';
-                        route.relocate_node(curr, sel, sel_pred);  
+                        route.relocate_node(curr, sel, 123);  
 
                         if (!local_source.contains_edge(curr, sel)) {
                             new_edges += 1;
