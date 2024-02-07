@@ -18,6 +18,8 @@ struct MatrixPheromone {
                                  // where 0 <= a, b < dimension_
     bool is_symmetric_ = true;
 
+    double delta = 0;
+
     MatrixPheromone(uint32_t dimension, double initial_pheromone, bool is_symmetric)
         : dimension_(dimension),
           trails_(dimension * dimension, initial_pheromone),
@@ -29,12 +31,25 @@ struct MatrixPheromone {
         return trails_[from * dimension_ + to];
     }
 
-    void evaporate(double evaporation_rate, double min_pheromone_value, double delta = 0.0) {
+    void init_smooth(double delta_) {
+        delta = delta_;
+    }
+
+    void evaporate(double evaporation_rate, double min_pheromone_value) {
         const auto n = trails_.size();
 
         #pragma omp for schedule(static)
         for (size_t i = 0; i < n; ++i) {
-            trails_[i] = std::max(min_pheromone_value, trails_[i] * (1 - evaporation_rate) + delta);
+            trails_[i] = std::max(min_pheromone_value, trails_[i] * (1 - evaporation_rate));
+        }
+    }
+
+    void evaporate_smooth(double evaporation_rate) {
+        const auto n = trails_.size();
+
+        #pragma omp for schedule(static)
+        for (size_t i = 0; i < n; ++i) {
+            trails_[i] = trails_[i] * (1 - evaporation_rate) + delta;
         }
     }
 
@@ -63,6 +78,7 @@ struct CandListPheromone {
     uint32_t cl_size_ = 0;
     bool is_symmetric_ = true;
     double default_pheromone_value_ = 0;
+    double delta = 0;
 
     template<typename NodeList_t>
     CandListPheromone(const std::vector<NodeList_t> &cand_lists,
@@ -118,17 +134,33 @@ struct CandListPheromone {
         }
     }
 
-    void evaporate(double evaporation_rate, double min_pheromone_value, double delta = 0.0) {
+    void init_smooth(double delta_) {
+        delta = delta_;
+    }
+
+    void evaporate(double evaporation_rate, double min_pheromone_value) {
         const auto n = trails_.size();
 
         #pragma omp for schedule(static)
         for (size_t i = 0; i < n; ++i) {
-            trails_[i] = std::max(min_pheromone_value, trails_[i] * (1 - evaporation_rate) + delta);
+            trails_[i] = std::max(min_pheromone_value, trails_[i] * (1 - evaporation_rate));
         }
 
         #pragma omp single
-        default_pheromone_value_ = std::max(default_pheromone_value_ * (1 - evaporation_rate) + delta,
+        default_pheromone_value_ = std::max(default_pheromone_value_ * (1 - evaporation_rate),
                                             min_pheromone_value);
+    }
+
+    void evaporate_smooth(double evaporation_rate) {
+        const auto n = trails_.size();
+
+        #pragma omp for schedule(static)
+        for (size_t i = 0; i < n; ++i) {
+            trails_[i] = trails_[i] * (1 - evaporation_rate) + delta;
+        }
+
+        #pragma omp single
+        default_pheromone_value_ = default_pheromone_value_ * (1 - evaporation_rate) + delta;
     }
 
     void set_all_trails(double pheromone_value) {

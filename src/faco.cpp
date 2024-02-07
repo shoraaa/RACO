@@ -260,6 +260,7 @@ protected:
     double p_best_;
     double rho_;
     double tau_min_;
+    double deposit_smooth_;
     uint32_t cand_list_size_;
 public:
     Limits trail_limits_;
@@ -285,16 +286,18 @@ public:
                                            p_best_, rho_, solution_cost);
     }
 
-    void update_trail_limits_smooth() {
+    void init_trail_limits_smooth() {
         trail_limits_.max_ = 1.0;
-        trail_limits_.min_ = tau_min_;
+        trail_limits_.min_ = tau_min_; // problem.dimension_
+        deposit_smooth_ = rho_ * (trail_limits_.max_ - trail_limits_.min_);
+        get_pheromone().init_smooth(-rho * tau_min_);
     }
     void evaporate_pheromone() {
         get_pheromone().evaporate(1 - rho_, trail_limits_.min_);
     }
 
     void evaporate_pheromone_smooth() {
-        get_pheromone().evaporate(1 - rho_, trail_limits_.min_, -rho_ * trail_limits_.min_);
+        get_pheromone().evaporate_smooth(1 - rho_);
     }
 
     decltype(auto) get_pheromone() {
@@ -316,12 +319,10 @@ public:
     }
 
     double deposit_pheromone_smooth(const Ant &sol) {
-        const double deposit = rho_ * (trail_limits_.max_ - trail_limits_.min_);
         auto prev_node = sol.route_.back();
         auto &pheromone = get_pheromone();
         for (auto node : sol.route_) {
-            // The global update of the pheromone trails
-            pheromone.increase(prev_node, node, deposit, trail_limits_.max_);
+            pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
             prev_node = node;
         }
         return deposit;
