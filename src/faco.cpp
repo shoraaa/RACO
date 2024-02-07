@@ -1606,7 +1606,7 @@ public:
     }
 
     void revert_change(uint32_t target, uint32_t node, uint32_t node_pred_) {
-        if (succ_[target] == node) { return ; }
+        if (target == node_pred_) { return ; }
 
         const auto node_pred = node_pred_;
         const auto node_succ = succ_[node_pred];
