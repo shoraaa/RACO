@@ -2380,6 +2380,8 @@ run_rbaco(const ProblemInstance &problem,
 
                 }
 
+                route = FastRoute{ local_source.route_, problem.get_distance_fn() };
+                route.cost_ = local_source.cost_;
                 auto curr = best_start;
                 for (auto& sel : changes) {
                     route.relocate_node(curr, sel);
