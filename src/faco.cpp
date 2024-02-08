@@ -2143,7 +2143,7 @@ run_raco(const ProblemInstance &problem,
                 Route actual_route(route);
 
                 int cnt = 0;
-                for (auto& v : route.route_) {
+                for (auto& v : route.succ_) {
                     cnt++;
                 }
 
