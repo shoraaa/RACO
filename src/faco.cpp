@@ -599,10 +599,10 @@ public:
         auto prev_node = sol.route_.back();
         auto &pheromone = get_pheromone();
         for (auto node : sol.route_) {
-            if (!source.contains_edge(prev_node, node)) {
+            // if (!source.contains_edge(prev_node, node)) {
                 pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
-            } else {
-                pheromone.increase(prev_node, node, deposit_smooth_mid_, trail_limits_.max_);
+            // } else {
+                // pheromone.increase(prev_node, node, deposit_smooth_mid_, trail_limits_.max_);
             }
             prev_node = node;
         }
