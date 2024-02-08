@@ -893,7 +893,7 @@ public:
             curr = positions_[curr];
         }
         uint32_t pos = 0;
-        for (auto node : route) {
+        for (auto node : route_) {
             positions_[node] = pos++;
         }
     }
