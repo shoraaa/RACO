@@ -1945,7 +1945,7 @@ run_raco(const ProblemInstance &problem,
 
             Route local_source{ source_solution->route_, problem.get_distance_fn() };
             local_source.cost_ = source_solution->cost_;
-            
+
             //Mask visited(dimension);
             Bitmask visited(dimension);
 
@@ -2113,7 +2113,7 @@ run_raco(const ProblemInstance &problem,
                 // Increase pheromone values on the edges of the new
                 // source_solution
                 if (opt.smooth_) {
-                    model.deposit_pheromone_smooth(update_ant, source_solution);
+                    model.deposit_pheromone_smooth(update_ant);
                 } else {
                     model.deposit_pheromone(update_ant);
                 }
