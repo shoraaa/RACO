@@ -1977,7 +1977,7 @@ run_raco(const ProblemInstance &problem,
                 // l
 
                 double start_cs = omp_get_wtime();
-                while (new_edges < target_new_edges && visited_count < dimension) {
+                while (new_edges < target_new_edges) {
                     auto curr = curr_node;
 
                     // auto nn_list = problem.get_nearest_neighbors(curr, cl_size);
