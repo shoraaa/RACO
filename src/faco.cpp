@@ -2022,6 +2022,11 @@ run_raco(const ProblemInstance &problem,
 
                     curr_node = sel;
 
+                    if (opt.force_new_edge_ && local_source.contains_edge(curr, sel)) {
+                        cerr << "wrong!! " << curr << ' ' << sel << '\n';
+                        abort();
+                    }
+
                     if (opt.force_new_edge_ || !local_source.contains_edge(curr, sel)) {
                         /*
                         For simplicity and efficiency, we are looking only at
