@@ -857,6 +857,103 @@ uint32_t select_next_node(const Pheromone_t &/*pheromone*/,
     return chosen_node;
 }
 
+class DLLRoute {
+public:
+    using CostFunction = std::function<double (uint32_t, uint32_t)>;
+
+    std::vector<uint32_t> succ_, pred_;
+    double cost_ = 0;
+    CostFunction cost_fn_;
+
+    DLLRoute(std::vector<uint32_t> route, CostFunction fn)
+        : cost_fn_(fn)
+    {
+        pred_.resize(route.size());
+        succ_.resize(route.size());
+        
+        for (int32_t i = 1; i < route.size(); ++i) {
+            pred_[route[i]] = route[i - 1];
+            succ_[route[i - 1]] = route[i];
+        }
+        pred_[route[0]] = route.back();
+        succ_[route.back()] = route[0];
+    }
+
+    void relocate_node(uint32_t target, uint32_t node) {
+        
+        if (succ_[target] == node) { 
+            return;
+        }
+
+        const auto node_pred = pred_[node];
+        const auto node_succ = succ_[node];
+        const auto target_succ = succ_[target];
+
+        succ_[node_pred] = node_succ; 
+        pred_[node_succ] = node_pred;
+
+        succ_[target] = node; 
+        pred_[node] = target;
+
+        succ_[node] = target_succ; 
+        pred_[target_succ] = node;
+
+
+        // We are removing these edges:
+        cost_ += - cost_fn_(node_pred, node)
+                 - cost_fn_(node, node_succ)
+                 - cost_fn_(target, target_succ)
+                 + cost_fn_(node_pred, node_succ)
+                 + cost_fn_(target, node)
+                 + cost_fn_(node, target_succ);
+
+    }
+
+    void revert_change(uint32_t target, uint32_t node, uint32_t node_pred_) {
+        if (target == node_pred_) {
+            return;
+        }
+
+        const auto node_pred = node_pred_;
+        const auto node_succ = succ_[node_pred];
+        const auto target_succ = succ_[node];
+
+        succ_[node_pred] = node;
+        pred_[node] = node_pred;
+
+        succ_[target] = target_succ;
+        pred_[target_succ] = target;
+
+        succ_[node] = node_succ;
+        pred_[node_succ] = node;
+
+        cost_ += + cost_fn_(node_pred, node)
+                 + cost_fn_(node, node_succ)
+                 + cost_fn_(target, target_succ)
+                 - cost_fn_(node_pred, node_succ)
+                 - cost_fn_(target, node)
+                 - cost_fn_(node, target_succ);
+
+
+    }
+
+    size_t size() const { return route_.size(); }
+
+    inline uint32_t get_succ(uint32_t node) const {
+        return succ_[node];
+    }
+
+    inline uint32_t get_pred(uint32_t node) const {
+        return pred_[node];
+    }
+
+    bool contains_edge(uint32_t a, uint32_t b) const {
+        return b == succ_[a] || b == pred_[a];
+    }
+
+};
+
+
 class Route {
 public:
     using CostFunction = std::function<double (uint32_t, uint32_t)>;
@@ -873,8 +970,7 @@ public:
         }
     }
 
-    Route(DLLRoute& route) :
-          cost_fn_(route.cost_fn_)
+    Route(DLLRoute& route) : cost_fn_(route.cost_fn_)
     {
         route_.resize(route.succ_.size());
         uint32_t curr = 0;
@@ -1848,103 +1944,6 @@ public:
     }
 
 };
-
-class DLLRoute {
-public:
-    using CostFunction = std::function<double (uint32_t, uint32_t)>;
-
-    std::vector<uint32_t> succ_, pred_;
-    double cost_ = 0;
-    CostFunction cost_fn_;
-
-    DLLRoute(std::vector<uint32_t> route, CostFunction fn)
-        : cost_fn_(fn)
-    {
-        pred_.resize(route.size());
-        succ_.resize(route.size());
-        
-        for (int32_t i = 1; i < route.size(); ++i) {
-            pred_[route[i]] = route[i - 1];
-            succ_[route[i - 1]] = route[i];
-        }
-        pred_[route[0]] = route.back();
-        succ_[route.back()] = route[0];
-    }
-
-    void relocate_node(uint32_t target, uint32_t node) {
-        
-        if (succ_[target] == node) { 
-            return;
-        }
-
-        const auto node_pred = pred_[node];
-        const auto node_succ = succ_[node];
-        const auto target_succ = succ_[target];
-
-        succ_[node_pred] = node_succ; 
-        pred_[node_succ] = node_pred;
-
-        succ_[target] = node; 
-        pred_[node] = target;
-
-        succ_[node] = target_succ; 
-        pred_[target_succ] = node;
-
-
-        // We are removing these edges:
-        cost_ += - cost_fn_(node_pred, node)
-                 - cost_fn_(node, node_succ)
-                 - cost_fn_(target, target_succ)
-                 + cost_fn_(node_pred, node_succ)
-                 + cost_fn_(target, node)
-                 + cost_fn_(node, target_succ);
-
-    }
-
-    void revert_change(uint32_t target, uint32_t node, uint32_t node_pred_) {
-        if (target == node_pred_) {
-            return;
-        }
-
-        const auto node_pred = node_pred_;
-        const auto node_succ = succ_[node_pred];
-        const auto target_succ = succ_[node];
-
-        succ_[node_pred] = node;
-        pred_[node] = node_pred;
-
-        succ_[target] = target_succ;
-        pred_[target_succ] = target;
-
-        succ_[node] = node_succ;
-        pred_[node_succ] = node;
-
-        cost_ += + cost_fn_(node_pred, node)
-                 + cost_fn_(node, node_succ)
-                 + cost_fn_(target, target_succ)
-                 - cost_fn_(node_pred, node_succ)
-                 - cost_fn_(target, node)
-                 - cost_fn_(node, target_succ);
-
-
-    }
-
-    size_t size() const { return route_.size(); }
-
-    inline uint32_t get_succ(uint32_t node) const {
-        return succ_[node];
-    }
-
-    inline uint32_t get_pred(uint32_t node) const {
-        return pred_[node];
-    }
-
-    bool contains_edge(uint32_t a, uint32_t b) const {
-        return b == succ_[a] || b == pred_[a];
-    }
-
-};
-
 
 template<typename ComputationsLog_t>
 std::unique_ptr<Solution> 
