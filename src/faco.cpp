@@ -937,8 +937,6 @@ public:
 
     }
 
-    size_t size() const { return route_.size(); }
-
     inline uint32_t get_succ(uint32_t node) const {
         return succ_[node];
     }
