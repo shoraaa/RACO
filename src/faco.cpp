@@ -2145,7 +2145,7 @@ run_raco(const ProblemInstance &problem,
 
                 construction_time += omp_get_wtime() - start_cs;
 
-                Route actual_route { route };
+                Route actual_route(route);
 
                 if (use_ls) {
                     double start = omp_get_wtime();
