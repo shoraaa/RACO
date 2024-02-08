@@ -603,7 +603,7 @@ public:
                 pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
             // } else {
                 // pheromone.increase(prev_node, node, deposit_smooth_mid_, trail_limits_.max_);
-            }
+            // }
             prev_node = node;
         }
     }
