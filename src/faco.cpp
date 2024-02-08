@@ -2144,7 +2144,7 @@ run_raco(const ProblemInstance &problem,
 
                 int cnt = 0;
                 for (auto& v : route.succ_) {
-                    cnt++;
+                    cnt += v * v;
                 }
 
                 dll_time += omp_get_wtime() - start_dll;
