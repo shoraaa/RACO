@@ -288,7 +288,7 @@ public:
 
     void init_trail_limits_smooth() {
         trail_limits_.max_ = 1.0;
-        trail_limits_.min_ = tau_min_ != -1 ? tau_min_ : 1.0 / (problem_.dimension_ / 500);
+        trail_limits_.min_ = tau_min_ != -1 ? tau_min_ : 1.0 / (problem_.dimension_ / 500.0);
         deposit_smooth_ = rho_ * (trail_limits_.max_ - trail_limits_.min_);
         get_pheromone().init_smooth(rho_ * trail_limits_.min_);
     }
