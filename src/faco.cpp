@@ -2014,7 +2014,7 @@ run_raco(const ProblemInstance &problem,
 
                     curr_node = sel;
 
-                    if (!local_source.contains_edge(curr, sel)) {
+                    if (!local_source.contains_directed_edge(curr, sel)) {
                         /*
                         For simplicity and efficiency, we are looking only at
                         the (curr, sel) edge even though the relocation could
