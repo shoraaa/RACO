@@ -1984,7 +1984,7 @@ run_raco(const ProblemInstance &problem,
 
                     auto curr = curr_node;
                     if (opt.force_new_edge_) {
-                        visited.set_bit(local_source.get_succ(curr));
+                        visited.set_bit(route.get_succ(curr));
                     }
 
                     double start_snn = omp_get_wtime();
@@ -1997,7 +1997,7 @@ run_raco(const ProblemInstance &problem,
                     select_next_time += omp_get_wtime() - start_snn;
 
                     if (opt.force_new_edge_) {
-                        visited.clear_bit(local_source.get_succ(curr));
+                        visited.clear_bit(route.get_succ(curr));
                     }
 
                     const auto sel_pred = route.get_pred(sel);
@@ -2009,11 +2009,9 @@ run_raco(const ProblemInstance &problem,
                     route.relocate_node(curr, sel);  // Place sel node just after curr node
                     relocation_time += omp_get_wtime() - start_rn;
 
-                    assert(route.succ_[curr] == sel);  // We should have (curr, sel) edge
-
                     curr_node = sel;
 
-                    if (opt.force_new_edge_ || !local_source.contains_edge(curr, sel)) {
+                    if (!local_source.contains_edge(curr, sel)) {
                         /*
                         For simplicity and efficiency, we are looking only at
                         the (curr, sel) edge even though the relocation could
