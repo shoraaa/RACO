@@ -318,11 +318,13 @@ public:
         return deposit;
     }
 
-    void deposit_pheromone_smooth(const Ant &sol) {
+    void deposit_pheromone_smooth(const Ant &sol, const Route& source) {
         auto prev_node = sol.route_.back();
         auto &pheromone = get_pheromone();
         for (auto node : sol.route_) {
-            pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
+            if (!source.contains_edge(prev_node, node)) {
+                pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
+            }
             prev_node = node;
         }
     }
@@ -1946,6 +1948,8 @@ run_raco(const ProblemInstance &problem,
             Route local_source{ source_solution->route_, problem.get_distance_fn() };
             local_source.cost_ = source_solution->cost_;
 
+            Route original_route { local_source };
+
             //Mask visited(dimension);
             Bitmask visited(dimension);
 
@@ -2113,7 +2117,7 @@ run_raco(const ProblemInstance &problem,
                 // Increase pheromone values on the edges of the new
                 // source_solution
                 if (opt.smooth_) {
-                    model.deposit_pheromone_smooth(update_ant);
+                    model.deposit_pheromone_smooth(update_ant, original_route);
                 } else {
                     model.deposit_pheromone(update_ant);
                 }
