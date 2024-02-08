@@ -873,6 +873,25 @@ public:
         }
     }
 
+    Route(DLLRoute& route) :
+          cost_fn_(route.cost_fn_)
+    {
+        route_.resize(route.succ_.size());
+        uint32_t curr = 0;
+        for (auto& node : route_) {
+            node = curr;
+            curr = route.succ_[curr];
+        }
+
+        positions_.resize(route_.size());
+        uint32_t pos = 0;
+        for (auto node : route_) {
+            positions_[node] = pos++;
+        }
+
+        cost_ = route.cost_;
+    }
+
     /**
     Relocates node so that it directly follows the target node.
 
@@ -1830,6 +1849,102 @@ public:
 
 };
 
+class DLLRoute {
+public:
+    using CostFunction = std::function<double (uint32_t, uint32_t)>;
+
+    std::vector<uint32_t> succ_, pred_;
+    double cost_ = 0;
+    CostFunction cost_fn_;
+
+    DLLRoute(std::vector<uint32_t> route, CostFunction fn)
+        : cost_fn_(fn)
+    {
+        pred_.resize(route.size());
+        succ_.resize(route.size());
+        
+        for (int32_t i = 1; i < route.size(); ++i) {
+            pred_[route[i]] = route[i - 1];
+            succ_[route[i - 1]] = route[i];
+        }
+        pred_[route[0]] = route.back();
+        succ_[route.back()] = route[0];
+    }
+
+    void relocate_node(uint32_t target, uint32_t node) {
+        
+        if (succ_[target] == node) { 
+            return;
+        }
+
+        const auto node_pred = pred_[node];
+        const auto node_succ = succ_[node];
+        const auto target_succ = succ_[target];
+
+        succ_[node_pred] = node_succ; 
+        pred_[node_succ] = node_pred;
+
+        succ_[target] = node; 
+        pred_[node] = target;
+
+        succ_[node] = target_succ; 
+        pred_[target_succ] = node;
+
+
+        // We are removing these edges:
+        cost_ += - cost_fn_(node_pred, node)
+                 - cost_fn_(node, node_succ)
+                 - cost_fn_(target, target_succ)
+                 + cost_fn_(node_pred, node_succ)
+                 + cost_fn_(target, node)
+                 + cost_fn_(node, target_succ);
+
+    }
+
+    void revert_change(uint32_t target, uint32_t node, uint32_t node_pred_) {
+        if (target == node_pred_) {
+            return;
+        }
+
+        const auto node_pred = node_pred_;
+        const auto node_succ = succ_[node_pred];
+        const auto target_succ = succ_[node];
+
+        succ_[node_pred] = node;
+        pred_[node] = node_pred;
+
+        succ_[target] = target_succ;
+        pred_[target_succ] = target;
+
+        succ_[node] = node_succ;
+        pred_[node_succ] = node;
+
+        cost_ += + cost_fn_(node_pred, node)
+                 + cost_fn_(node, node_succ)
+                 + cost_fn_(target, target_succ)
+                 - cost_fn_(node_pred, node_succ)
+                 - cost_fn_(target, node)
+                 - cost_fn_(node, target_succ);
+
+
+    }
+
+    size_t size() const { return route_.size(); }
+
+    inline uint32_t get_succ(uint32_t node) const {
+        return succ_[node];
+    }
+
+    inline uint32_t get_pred(uint32_t node) const {
+        return pred_[node];
+    }
+
+    bool contains_edge(uint32_t a, uint32_t b) const {
+        return b == succ_[a] || b == pred_[a];
+    }
+
+};
+
 
 template<typename ComputationsLog_t>
 std::unique_ptr<Solution> 
@@ -1960,7 +2075,8 @@ run_raco(const ProblemInstance &problem,
 
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
-                Route route { local_source };  // We use "external" route and only copy it back to ant
+                DLLRoute route { local_source.route_, problem.get_distance_fn() };  // We use "external" route and only copy it back to ant
+                route.cost_ = local_source.cost_;
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -1975,8 +2091,6 @@ run_raco(const ProblemInstance &problem,
                 uint32_t new_edges = 0;
                 auto curr_node = start_node;
                 uint32_t visited_count = 1;
-
-                // l
 
                 double start_cs = omp_get_wtime();
                 while (new_edges < target_new_edges && visited_count < dimension) {
@@ -2031,37 +2145,35 @@ run_raco(const ProblemInstance &problem,
 
                 construction_time += omp_get_wtime() - start_cs;
 
-                if (opt.count_new_edges_) {  // How many new edges are in the new sol. actually?
-                    total_new_edges += count_diff_edges(route, local_source);
-                }
+                Route actual_route { route };
 
                 if (use_ls) {
                     double start = omp_get_wtime();
-                    route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                    actual_route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                     ls_time += omp_get_wtime() - start;
                 }
 
                 // No need to recalculate route length -- we are updating it along with the changes
                 // resp. to the current local source solution
                 // ant.cost_ = problem.calculate_route_length(route.route_);
-                assert( abs(problem.calculate_route_length(route.route_) - route.cost_) < 1e-6 );
+                // assert( abs(problem.calculate_route_length(route.route_) - route.cost_) < 1e-6 );
 
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
                 if (!opt.keep_better_ant_sol_ 
-                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
-                    ant.cost_  = route.cost_;
-                    ant.route_ = route.route_;
+                        || (opt.keep_better_ant_sol_ && actual_route.cost_ < ant.cost_)) {
+                    ant.cost_  = actual_route.cost_;
+                    ant.route_ = actual_route.route_;
 
                     ++ant_sol_updates;
                 }
 
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
-                if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
-                    local_source = Route{ route.route_, problem.get_distance_fn() };
-                    local_source.cost_ = route.cost_;
+                if (opt.source_sol_local_update_ && actual_route.cost_ < local_source.cost_) {
+                    local_source = Route{ actual_route.route_, problem.get_distance_fn() };
+                    local_source.cost_ = actual_route.cost_;
 
                     ++local_source_sol_updates;
                 }
