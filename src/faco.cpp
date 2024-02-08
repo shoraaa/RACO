@@ -2224,7 +2224,7 @@ int main(int argc, char *argv[]) {
             alg = run_raco;
 
             if (args.ants_count_ == 0) {
-                auto r = 4 * sqrt(problem.dimension_);
+                auto r = 6 * sqrt(problem.dimension_);
                 args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
             }
         }
