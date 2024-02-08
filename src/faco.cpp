@@ -566,6 +566,7 @@ public:
         deposit_smooth_ = rho_ * (trail_limits_.max_ - trail_limits_.min_);
         double tau_mid = (trail_limits_.max_ + trail_limits_.min_) / 2.0;
         deposit_smooth_mid_ = rho_ * (tau_mid - trail_limits_.min_);
+        cout << "SMMAS - tau_mid : " << tau_mid << '\n';
         get_pheromone().init_smooth(rho_ * trail_limits_.min_);
     }
     void evaporate_pheromone() {
