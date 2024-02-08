@@ -2033,6 +2033,7 @@ run_raco(const ProblemInstance &problem,
     double select_next_time = 0;
     double relocation_time = 0;
     uint32_t loop_count = 0;
+    double dll_time = 0;
 
     #pragma omp parallel default(shared)
     {
@@ -2066,14 +2067,17 @@ run_raco(const ProblemInstance &problem,
             // threads scheduling. With "static" the computations always follow
             // the same path -- i.e. if we run the program with the same PRNG
             // seed (--seed X) then we get exactly the same results.
-            #pragma omp for schedule(static, 1) reduction(+ : loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
+            #pragma omp for schedule(static, 1) reduction(+ : dll_time, loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
+
+                double start_dll = omp_get_wtime();
                 DLLRoute route { local_source.route_, problem.get_distance_fn() };  // We use "external" route and only copy it back to ant
                 route.cost_ = local_source.cost_;
+                dll_time += start_dll;
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -2142,7 +2146,9 @@ run_raco(const ProblemInstance &problem,
 
                 construction_time += omp_get_wtime() - start_cs;
 
+                double start_dll = omp_get_wtime();
                 Route actual_route(route);
+                dll_time += start_dll;
 
                 if (use_ls) {
                     double start = omp_get_wtime();
@@ -2244,6 +2250,7 @@ run_raco(const ProblemInstance &problem,
     comp_log("relocation node time", relocation_time);
     comp_log("local search time", ls_time);
     comp_log("loop count", loop_count);
+    comp_log("double linked list time", dll_time);
 
     return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
 }
