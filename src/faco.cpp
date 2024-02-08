@@ -2059,14 +2059,9 @@ run_raco(const ProblemInstance &problem,
             Route local_source{ source_solution->route_, problem.get_distance_fn() };
             local_source.cost_ = source_solution->cost_;
 
-            //Mask visited(dimension);
             Bitmask visited(dimension);
 
-            // Changing schedule from "static" to "dynamic" can speed up
-            // computations a bit, however it introduces non-determinism due to
-            // threads scheduling. With "static" the computations always follow
-            // the same path -- i.e. if we run the program with the same PRNG
-            // seed (--seed X) then we get exactly the same results.
+
             #pragma omp for schedule(static, 1) reduction(+ : dll_time, loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
@@ -2077,7 +2072,7 @@ run_raco(const ProblemInstance &problem,
                 double start_dll = omp_get_wtime();
                 DLLRoute route { local_source.route_, problem.get_distance_fn() };  // We use "external" route and only copy it back to ant
                 route.cost_ = local_source.cost_;
-                dll_time += start_dll;
+                dll_time += start_dll - omp_get_wtime();
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -2148,7 +2143,7 @@ run_raco(const ProblemInstance &problem,
 
                 start_dll = omp_get_wtime();
                 Route actual_route(route);
-                dll_time += start_dll;
+                dll_time += start_dll - omp_get_wtime();
 
                 if (use_ls) {
                     double start = omp_get_wtime();
@@ -2226,9 +2221,7 @@ run_raco(const ProblemInstance &problem,
                 auto &update_ant = use_best_ant ? *best_ant : *iteration_best;
 
                 double start = omp_get_wtime();
-
-                // Increase pheromone values on the edges of the new
-                // source_solution
+                
                 if (opt.smooth_) {
                     model.deposit_pheromone_smooth(update_ant);
                 } else {
