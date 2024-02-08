@@ -861,42 +861,61 @@ class DLLRoute {
 public:
     using CostFunction = std::function<double (uint32_t, uint32_t)>;
 
-    std::vector<uint32_t> succ_, pred_;
+    std::vector<uint32_t> route_; // pred_
+    std::vector<uint32_t> positions_;  // succ_
     double cost_ = 0;
     CostFunction cost_fn_;
 
-    DLLRoute(std::vector<uint32_t> route, CostFunction fn)
-        : cost_fn_(fn)
+    DLLRoute(std::vector<uint32_t> route, CostFunction fn, bool from_succ = false)
+        : route_(route), cost_fn_(fn)
     {
-        pred_.resize(route.size());
-        succ_.resize(route.size());
+        if (from_succ) {
+            positions_.resize(route.size());
+            auto prev_node = route.back();
+            for (auto node : route) {
+                positions_[prev_node] = node;
+                route_[node] = prev_node;
+                prev_node = node;
+            }
+        } else {
+            positions_.resize(route.size());
+            uint32_t pos = 0;
+            for (auto node : route) {
+                positions_[node] = pos++;
+            }
+        }
+    }
 
-        auto prev_node = route.back();
+    void validate() {
+        uint32_t curr = 0;
+        for (auto& node : route_) {
+            node = curr;
+            curr = positions_[curr];
+        }
+        uint32_t pos = 0;
         for (auto node : route) {
-            succ_[prev_node] = node;
-            pred_[node] = prev_node;
-            prev_node = node;
+            positions_[node] = pos++;
         }
     }
 
     void relocate_node(uint32_t target, uint32_t node) {
         
-        if (succ_[target] == node) { 
+        if (positions_[target] == node) { 
             return;
         }
 
-        const auto node_pred = pred_[node];
-        const auto node_succ = succ_[node];
-        const auto target_succ = succ_[target];
+        const auto node_pred = route_[node];
+        const auto node_succ = positions_[node];
+        const auto target_succ = positions_[target];
 
-        succ_[node_pred] = node_succ; 
-        pred_[node_succ] = node_pred;
+        positions_[node_pred] = node_succ; 
+        route_[node_succ] = node_pred;
 
-        succ_[target] = node; 
-        pred_[node] = target;
+        positions_[target] = node; 
+        route_[node] = target;
 
-        succ_[node] = target_succ; 
-        pred_[target_succ] = node;
+        positions_[node] = target_succ; 
+        route_[target_succ] = node;
 
 
         // We are removing these edges:
@@ -915,17 +934,17 @@ public:
         }
 
         const auto node_pred = node_pred_;
-        const auto node_succ = succ_[node_pred];
-        const auto target_succ = succ_[node];
+        const auto node_succ = positions_[node_pred];
+        const auto target_succ = positions_[node];
 
-        succ_[node_pred] = node;
-        pred_[node] = node_pred;
+        positions_[node_pred] = node;
+        route_[node] = node_pred;
 
-        succ_[target] = target_succ;
-        pred_[target_succ] = target;
+        positions_[target] = target_succ;
+        route_[target_succ] = target;
 
-        succ_[node] = node_succ;
-        pred_[node_succ] = node;
+        positions_[node] = node_succ;
+        route_[node_succ] = node;
 
         cost_ += + cost_fn_(node_pred, node)
                  + cost_fn_(node, node_succ)
@@ -937,16 +956,196 @@ public:
 
     }
 
-    inline uint32_t get_succ(uint32_t node) const {
-        return succ_[node];
+    size_t size() const { return route_.size(); }
+
+    uint32_t operator[](uint32_t index) const {
+        assert(index < route_.size());
+        return route_[index]; 
     }
 
-    inline uint32_t get_pred(uint32_t node) const {
-        return pred_[node];
+    uint32_t get_succ(uint32_t node) const {
+        assert(node < route_.size());
+        auto pos = positions_.at(node);
+        return (pos + 1 == route_.size())
+             ? route_[0]
+             : route_[pos + 1];
+    }
+
+    uint32_t get_pred(uint32_t node) const {
+        assert(node < route_.size());
+        auto pos = positions_.at(node);
+        return pos == 0
+             ? route_.back()
+             : route_[pos - 1];
     }
 
     bool contains_edge(uint32_t a, uint32_t b) const {
-        return b == succ_[a] || b == pred_[a];
+        return b == get_succ(a) || b == get_pred(a);
+    }
+
+    bool contains_directed_edge(uint32_t a, uint32_t b) const {
+        return b == get_succ(a);
+    }
+
+    /*
+    * This performs a 2-opt move by flipping a section of the route.  The
+    * boundaries of the section are given by first and last, i.e.  it reverses
+    * the segment [start_node, ..., end_node), however it may happen that the section is
+    * very long compared to the remaining part of the route. In such case, the
+    * remaining part is flipped, to speed things up as the result of such flip
+    * results in equivalent solution.
+    */
+    int32_t flip_route_section(int32_t start_node, int32_t end_node) {
+        auto first = positions_[start_node];
+        auto last = positions_[end_node];
+
+        if (first > last) {
+            std::swap(first, last);
+        }
+
+        const auto length = static_cast<int32_t>(route_.size());
+        const int32_t segment_length = last - first;
+        const int32_t remaining_length = length - segment_length;
+
+        if (segment_length <= remaining_length) {  // Reverse the specified segment
+            std::reverse(route_.begin() + first, route_.begin() + last);
+
+            for (auto k = first; k < last; ++k) {
+                positions_[ route_[k] ] = k;
+            }
+            return first;
+        } else {  // Reverse the rest of the route, leave the segment intact
+            first = (first > 0) ? first - 1 : length - 1;
+            last = last % length;
+            std::swap(first, last);
+            int32_t l = first;
+            int32_t r = last;
+            int32_t i = 0;
+            int32_t j = length - first + last + 1;
+            while(i++ < j--) {
+                std::swap(route_[l], route_[r]);
+                positions_[route_[l]] = l;
+                positions_[route_[r]] = r;
+                l = (l+1) % length;
+                r = (r > 0) ? r - 1 : length - 1;
+            }
+        }
+        return 0;
+    }
+
+    double get_dist_to_succ(uint32_t node) {
+        return cost_fn_(node, get_succ(node));
+    }
+
+    /**
+     * This impl. of the 2-opt heuristic uses a queue of nodes to check for an
+     * improving move, i.e. checklist. This is useful to speed up computations
+     * if the route was 2-optimal but a few new edges were introduced -- endpoints
+     * of the new edges should be inserted into checklist.
+     */
+    void two_opt_nn(const ProblemInstance &instance,
+                    std::vector<uint32_t> &checklist,
+                    uint32_t nn_list_size) {
+
+        // We assume symmetry so that the order of the nodes does not matter
+        assert(instance.is_symmetric_);
+
+        // Setting maximum number of allowed route changes prevents very long-running times
+        // for very hard to solve TSP instances.
+        const uint32_t MaxChanges = size();
+        uint32_t changes_count = 0;
+
+        double cost_change = 0;
+
+        size_t checklist_pos_pos = 0;
+        while (checklist_pos_pos < checklist.size() && changes_count < MaxChanges) {
+            auto a = checklist[checklist_pos_pos++];
+            assert(a < route_.size());
+
+            auto a_next = get_succ(a);
+            auto a_prev = get_pred(a);
+
+            auto dist_a_to_next = get_dist_to_succ(a);// instance.get_distance(a, a_next);
+            auto dist_a_to_prev = get_dist_to_succ(a_prev);
+
+            double max_diff = -1;
+            std::array<uint32_t, 4> move;
+
+            const auto &nn_list = instance.get_nearest_neighbors(a, nn_list_size);
+
+            for (auto b : nn_list) {
+                auto dist_ab = instance.get_distance(a, b);
+                if (dist_a_to_next > dist_ab) {
+                    // We rotate the section between a and b_next so that
+                    // two new (undirected) edges are created: { a, b } and { a_next, b_next }
+                    //
+                    // a -> a_next ... b -> b_next
+                    // a -> b ... a_next -> b_next
+                    //
+                    // or
+                    //
+                    // b -> b_next ... a -> a_next
+                    // b -> a ... b_next -> a_next
+                    auto b_next = get_succ(b);
+
+                    auto diff = dist_a_to_next
+                            + get_dist_to_succ(b) //instance.get_distance(b, b_next)
+                            - dist_ab
+                            - instance.get_distance(a_next, b_next);
+
+                    if (diff > max_diff) {
+                        move = { a_next, b_next, a, b };
+                        max_diff = diff;
+                    }
+                } else {
+                    break ;
+                }
+            }
+
+            for (auto b : nn_list) {
+                auto dist_ab = instance.get_distance(a, b);
+                if (dist_a_to_prev > dist_ab) {
+                    // We rotate the section between a_prev and b so that
+                    // two new (undirected) edges are created: { a, b } and { a_prev, b_prev }
+                    //
+                    // a_prev -> a ... b_prev -> b
+                    // a_prev -> b_prev ... a -> b
+                    //
+                    // or
+                    //
+                    // b_prev -> b ... a_prev -> a
+                    // b_prev -> a_prev ... b -> a
+                    auto b_prev = get_pred(b);
+
+                    auto diff = dist_a_to_prev
+                            + get_dist_to_succ(b_prev)
+                            - dist_ab
+                            - instance.get_distance(a_prev, b_prev);
+
+                    if (diff > max_diff) {
+                        move = { a, b, a_prev, b_prev };
+                        max_diff = diff;
+                    }
+                } else {
+                    break ;
+                }
+            }
+
+            if (max_diff > 0) {
+                flip_route_section(move[0], move[1]);
+
+                for (auto x : move) {
+                    if (std::find(checklist.begin() + static_cast<int32_t>(checklist_pos_pos),
+                                checklist.end(), x) == checklist.end()) {
+                        checklist.push_back(x);
+                    }
+                }
+                ++changes_count;
+                cost_change -= max_diff;
+            }
+        }
+        assert(instance.is_route_valid(route_));
+        cost_ += cost_change;
     }
 
 };
@@ -966,24 +1165,6 @@ public:
         for (auto node : route) {
             positions_[node] = pos++;
         }
-    }
-
-    Route(DLLRoute& route) : cost_fn_(route.cost_fn_)
-    {
-        route_.resize(route.succ_.size());
-        uint32_t curr = 0;
-        for (auto& node : route_) {
-            node = curr;
-            curr = route.succ_[curr];
-        }
-
-        positions_.resize(route_.size());
-        uint32_t pos = 0;
-        for (auto node : route_) {
-            positions_[node] = pos++;
-        }
-
-        cost_ = route.cost_;
     }
 
     /**
@@ -2056,7 +2237,7 @@ run_raco(const ProblemInstance &problem,
                 }
             }
 
-            Route local_source{ source_solution->route_, problem.get_distance_fn() };
+            DLLRoute local_source{ source_solution->route_, problem.get_distance_fn(), false };
             local_source.cost_ = source_solution->cost_;
 
             Bitmask visited(dimension);
@@ -2069,7 +2250,7 @@ run_raco(const ProblemInstance &problem,
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
 
-                DLLRoute route { local_source.route_, problem.get_distance_fn() };  // We use "external" route and only copy it back to ant
+                DLLRoute route { local_source.route_, problem.get_distance_fn(), true }; 
                 route.cost_ = local_source.cost_;
 
                 auto start_node = get_rng().next_uint32(dimension);
@@ -2092,7 +2273,7 @@ run_raco(const ProblemInstance &problem,
 
                     auto curr = curr_node;
                     if (opt.force_new_edge_) {
-                        visited.set_bit(route.get_succ(curr));
+                        visited.set_bit(route.route_[curr]);
                     }
 
                     double start_snn = omp_get_wtime();
@@ -2105,10 +2286,10 @@ run_raco(const ProblemInstance &problem,
                     select_next_time += omp_get_wtime() - start_snn;
 
                     if (opt.force_new_edge_) {
-                        visited.clear_bit(route.get_succ(curr));
+                        visited.clear_bit(route.route_[curr]);
                     }
 
-                    const auto sel_pred = route.get_pred(sel);
+                    const auto sel_pred = route.positions_[sel];
 
                     visited.set_bit(sel);
                     ++visited_count;
@@ -2140,18 +2321,12 @@ run_raco(const ProblemInstance &problem,
                 construction_time += omp_get_wtime() - start_cs;
 
                 double start_dll = omp_get_wtime();
-                Route actual_route(route);
-
-                int cnt = 0;
-                for (auto& v : route.succ_) {
-                    cnt += v * v;
-                }
-
+                route.validate();
                 dll_time += omp_get_wtime() - start_dll;
 
                 if (use_ls) {
                     double start = omp_get_wtime();
-                    actual_route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                    route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                     ls_time += omp_get_wtime() - start;
                 }
 
@@ -2164,18 +2339,18 @@ run_raco(const ProblemInstance &problem,
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
                 if (!opt.keep_better_ant_sol_ 
-                        || (opt.keep_better_ant_sol_ && actual_route.cost_ < ant.cost_)) {
-                    ant.cost_  = actual_route.cost_;
-                    ant.route_ = actual_route.route_;
+                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
+                    ant.cost_  = route.cost_;
+                    ant.route_ = route.route_;
 
                     ++ant_sol_updates;
                 }
 
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
-                if (opt.source_sol_local_update_ && actual_route.cost_ < local_source.cost_) {
-                    local_source = Route{ actual_route.route_, problem.get_distance_fn() };
-                    local_source.cost_ = actual_route.cost_;
+                if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
+                    local_source = DLLRoute{ route.route_, problem.get_distance_fn(), false };
+                    local_source.cost_ = route.cost_;
 
                     ++local_source_sol_updates;
                 }
