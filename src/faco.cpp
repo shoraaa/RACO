@@ -1919,6 +1919,7 @@ run_raco(const ProblemInstance &problem,
     double construction_time = 0;
     double ls_time = 0;
     double select_next_time = 0;
+    double relocation_time = 0;
 
     #pragma omp parallel default(shared)
     {
@@ -1952,7 +1953,7 @@ run_raco(const ProblemInstance &problem,
             // threads scheduling. With "static" the computations always follow
             // the same path -- i.e. if we run the program with the same PRNG
             // seed (--seed X) then we get exactly the same results.
-            #pragma omp for schedule(static, 1) reduction(+ : select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
+            #pragma omp for schedule(static, 1) reduction(+ : relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
@@ -1977,7 +1978,7 @@ run_raco(const ProblemInstance &problem,
                 // l
 
                 double start_cs = omp_get_wtime();
-                while (new_edges < target_new_edges) {
+                while (new_edges < target_new_edges && visited_count < dimension) {
                     auto curr = curr_node;
 
                     // auto nn_list = problem.get_nearest_neighbors(curr, cl_size);
@@ -2004,11 +2005,14 @@ run_raco(const ProblemInstance &problem,
                     // ant.visit(sel);
                     visited.set_bit(sel);
                     ++visited_count;
+
+                    double start_rn = omp_get_wtime();
                     route.relocate_node(curr, sel);  // Place sel node just after curr node
+                    relocation_time += omp_get_wtime() - start_rn;
 
                     assert(route.succ_[curr] == sel);  // We should have (curr, sel) edge
 
-                    // if (!local_source.contains_edge(curr, sel)) {
+                    if (!opt.force_new_edge_ && !local_source.contains_edge(curr, sel)) {
                         /*
                         For simplicity and efficiency, we are looking only at
                         the (curr, sel) edge even though the relocation could
@@ -2023,7 +2027,7 @@ run_raco(const ProblemInstance &problem,
                         if (!contains(ls_checklist, curr)) { ls_checklist.push_back(curr); }
                         if (!contains(ls_checklist, sel)) { ls_checklist.push_back(sel); }
                         if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
-                    // }
+                    }
                     curr_node = sel;
                 }
 
@@ -2130,6 +2134,7 @@ run_raco(const ProblemInstance &problem,
     comp_log("total new edges", total_new_edges);
     comp_log("tour construction time", construction_time);
     comp_log("select next node time", select_next_time);
+    comp_log("relocation node time", relocation_time);
     comp_log("local search time", ls_time);
 
     return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
