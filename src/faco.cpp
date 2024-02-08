@@ -1472,8 +1472,7 @@ run_mfaco(const ProblemInstance &problem,
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
-                if (!opt.keep_better_ant_sol_ 
-                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
+                if (route.cost_ < ant.cost_) {
                     ant.cost_  = route.cost_;
                     ant.route_ = route.route_;
 
