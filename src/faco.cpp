@@ -534,7 +534,7 @@ protected:
     double p_best_;
     double rho_;
     double tau_min_;
-    double deposit_smooth_;
+    double deposit_smooth_, deposit_smooth_mid_;
     uint32_t cand_list_size_;
 public:
     Limits trail_limits_;
@@ -564,6 +564,8 @@ public:
         trail_limits_.max_ = 1.0;
         trail_limits_.min_ = tau_min_ != -1 ? tau_min_ : 1.0 / (problem_.dimension_ / 500.0);
         deposit_smooth_ = rho_ * (trail_limits_.max_ - trail_limits_.min_);
+        double tau_mid = (trail_limits_.max_ + trail_limits_.min_) / 2.0;
+        deposit_smooth_mid_ = rho_ * (tau_mid - trail_limits_.min_);
         get_pheromone().init_smooth(rho_ * trail_limits_.min_);
     }
     void evaporate_pheromone() {
@@ -598,6 +600,8 @@ public:
         for (auto node : sol.route_) {
             if (!source.contains_edge(prev_node, node)) {
                 pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
+            } else {
+                pheromone.increase(prev_node, node, deposit_smooth_mid_, trail_limits_.max_);
             }
             prev_node = node;
         }
