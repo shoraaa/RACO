@@ -1983,29 +1983,25 @@ run_raco(const ProblemInstance &problem,
                     loop_count += 1;
 
                     auto curr = curr_node;
-
-                    // auto nn_list = problem.get_nearest_neighbors(curr, cl_size);
-                    // auto nn = *nn_list.begin();
-                    // bool greed = get_rng().next_float() < opt.p_greed_;
                     if (opt.force_new_edge_) {
-                        // cerr << route.succ_[curr] << " get set cuz force.\n";
                         visited.set_bit(local_source.get_succ(curr));
-                        // greed |= !visited.is_set(nn);
                     }
 
                     double start_snn = omp_get_wtime();
                     auto sel = select_next_node(pheromone, heuristic,
-                                                problem.get_nearest_neighbors(curr, cl_size), //nn_list,
+                                                problem.get_nearest_neighbors(curr, cl_size),
                                                 nn_product_cache,
                                                 problem.get_backup_neighbors(curr, cl_size, bl_size),
                                                 curr,
                                                 visited);
                     select_next_time += omp_get_wtime() - start_snn;
 
-                    const auto sel_pred = route.get_pred(sel);
-                    // cerr << sel_pred << " is the selected prec.\n";
+                    if (opt.force_new_edge_) {
+                        visited.clear_bit(local_source.get_succ(curr));
+                    }
 
-                    // ant.visit(sel);
+                    const auto sel_pred = route.get_pred(sel);
+
                     visited.set_bit(sel);
                     ++visited_count;
 
