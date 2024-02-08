@@ -2146,7 +2146,7 @@ run_raco(const ProblemInstance &problem,
 
                 construction_time += omp_get_wtime() - start_cs;
 
-                double start_dll = omp_get_wtime();
+                start_dll = omp_get_wtime();
                 Route actual_route(route);
                 dll_time += start_dll;
 
