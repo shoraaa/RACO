@@ -2011,7 +2011,7 @@ run_raco(const ProblemInstance &problem,
 
                     curr_node = sel;
 
-                    // if (!local_source.contains_edge(curr, sel)) {
+                    if (!local_source.contains_edge(curr, sel)) {
                         /*
                         For simplicity and efficiency, we are looking only at
                         the (curr, sel) edge even though the relocation could
@@ -2026,7 +2026,7 @@ run_raco(const ProblemInstance &problem,
                         if (!contains(ls_checklist, curr)) { ls_checklist.push_back(curr); }
                         if (!contains(ls_checklist, sel)) { ls_checklist.push_back(sel); }
                         if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
-                    // }
+                    }
                 }
 
                 construction_time += omp_get_wtime() - start_cs;
