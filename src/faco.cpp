@@ -887,9 +887,11 @@ public:
     }
 
     void validate() {
+        int32_t n = route_.size();
+        route_.clear();
         uint32_t curr = 0;
-        for (auto& node : route_) {
-            node = curr;
+        while (n--) {
+            route_.emplace_back(curr);
             curr = positions_[curr];
         }
         uint32_t pos = 0;
