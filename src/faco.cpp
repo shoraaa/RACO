@@ -1989,7 +1989,7 @@ run_raco(const ProblemInstance &problem,
                     // bool greed = get_rng().next_float() < opt.p_greed_;
                     if (opt.force_new_edge_) {
                         // cerr << route.succ_[curr] << " get set cuz force.\n";
-                        visited.set_bit(route.get_succ(curr));
+                        visited.set_bit(local_source.get_succ(curr));
                         // greed |= !visited.is_set(nn);
                     }
 
@@ -2001,11 +2001,6 @@ run_raco(const ProblemInstance &problem,
                                                 curr,
                                                 visited);
                     select_next_time += omp_get_wtime() - start_snn;
-
-                    if (opt.force_new_edge_ && sel == route.get_succ(curr)) {
-                        cerr << "wrong!! " << curr << ' ' << sel << '\n';
-                        abort();
-                    }
 
                     const auto sel_pred = route.get_pred(sel);
                     // cerr << sel_pred << " is the selected prec.\n";
@@ -2021,11 +2016,6 @@ run_raco(const ProblemInstance &problem,
                     assert(route.succ_[curr] == sel);  // We should have (curr, sel) edge
 
                     curr_node = sel;
-
-                    if (opt.force_new_edge_ && local_source.contains_edge(curr, sel)) {
-                        cerr << "wrong!! " << curr << ' ' << sel << '\n';
-                        abort();
-                    }
 
                     if (opt.force_new_edge_ || !local_source.contains_edge(curr, sel)) {
                         /*
