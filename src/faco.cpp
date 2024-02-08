@@ -1920,6 +1920,7 @@ run_raco(const ProblemInstance &problem,
     double ls_time = 0;
     double select_next_time = 0;
     double relocation_time = 0;
+    uint32_t loop_count = 0;
 
     #pragma omp parallel default(shared)
     {
@@ -1953,7 +1954,7 @@ run_raco(const ProblemInstance &problem,
             // threads scheduling. With "static" the computations always follow
             // the same path -- i.e. if we run the program with the same PRNG
             // seed (--seed X) then we get exactly the same results.
-            #pragma omp for schedule(static, 1) reduction(+ : relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
+            #pragma omp for schedule(static, 1) reduction(+ : loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
@@ -1979,6 +1980,8 @@ run_raco(const ProblemInstance &problem,
 
                 double start_cs = omp_get_wtime();
                 while (new_edges < target_new_edges && visited_count < dimension) {
+                    loop_count += 1;
+
                     auto curr = curr_node;
 
                     // auto nn_list = problem.get_nearest_neighbors(curr, cl_size);
@@ -2136,6 +2139,7 @@ run_raco(const ProblemInstance &problem,
     comp_log("select next node time", select_next_time);
     comp_log("relocation node time", relocation_time);
     comp_log("local search time", ls_time);
+    comp_log("loop count", loop_count);
 
     return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
 }
