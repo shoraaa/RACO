@@ -2002,6 +2002,11 @@ run_raco(const ProblemInstance &problem,
                                                 visited);
                     select_next_time += omp_get_wtime() - start_snn;
 
+                    if (opt.force_new_edge_ && sel == route.get_succ(curr)) {
+                        cerr << "wrong!! " << curr << ' ' << sel << '\n';
+                        abort();
+                    }
+
                     const auto sel_pred = route.get_pred(sel);
                     // cerr << sel_pred << " is the selected prec.\n";
 
