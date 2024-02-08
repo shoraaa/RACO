@@ -1977,7 +1977,7 @@ run_raco(const ProblemInstance &problem,
                 uint32_t visited_count = 1;
 
                 double start_cs = omp_get_wtime();
-                while (new_edges < target_new_edges && visited_count < dimension) {
+                while (ls_checklist.size() < target_new_edges && visited_count < dimension) {
                     loop_count += 1;
 
                     auto curr = curr_node;
