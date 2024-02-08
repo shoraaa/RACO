@@ -870,13 +870,13 @@ public:
     {
         pred_.resize(route.size());
         succ_.resize(route.size());
-        
-        for (int32_t i = 1; i < route.size(); ++i) {
-            pred_[route[i]] = route[i - 1];
-            succ_[route[i - 1]] = route[i];
+
+        auto prev_node = route.back();
+        for (auto node : route) {
+            succ_[prev_node] = node;
+            pred_[node] = prev_node;
+            prev_node = node;
         }
-        pred_[route[0]] = route.back();
-        succ_[route.back()] = route[0];
     }
 
     void relocate_node(uint32_t target, uint32_t node) {
