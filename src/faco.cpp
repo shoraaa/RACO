@@ -2015,7 +2015,7 @@ run_raco(const ProblemInstance &problem,
 
                     assert(route.succ_[curr] == sel);  // We should have (curr, sel) edge
 
-                    if (!opt.force_new_edge_ && !local_source.contains_edge(curr, sel)) {
+                    if (!local_source.contains_edge(curr, sel)) {
                         /*
                         For simplicity and efficiency, we are looking only at
                         the (curr, sel) edge even though the relocation could
