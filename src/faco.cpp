@@ -2069,10 +2069,8 @@ run_raco(const ProblemInstance &problem,
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
 
-                double start_dll = omp_get_wtime();
                 DLLRoute route { local_source.route_, problem.get_distance_fn() };  // We use "external" route and only copy it back to ant
                 route.cost_ = local_source.cost_;
-                dll_time += start_dll - omp_get_wtime();
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -2141,9 +2139,9 @@ run_raco(const ProblemInstance &problem,
 
                 construction_time += omp_get_wtime() - start_cs;
 
-                start_dll = omp_get_wtime();
+                double start_dll = omp_get_wtime();
                 Route actual_route(route);
-                dll_time += start_dll - omp_get_wtime();
+                dll_time +=  - omp_get_wtime() - start_dll;
 
                 if (use_ls) {
                     double start = omp_get_wtime();
