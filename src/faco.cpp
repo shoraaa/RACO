@@ -2007,6 +2007,12 @@ run_raco(const ProblemInstance &problem,
                     route.relocate_node(curr, sel);  // Place sel node just after curr node
                     relocation_time += omp_get_wtime() - start_rn;
 
+                    vector<uint32_t> random_vec(dimension);
+                    for (size_t i = 0; i < route.route_.size(); ++i) {
+                        random_vec[i] = route.route_[i];
+                    }
+
+
                     curr_node = sel;
 
                     if (!local_source.contains_edge(curr, sel)) {
