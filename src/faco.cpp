@@ -1998,6 +1998,11 @@ run_raco(const ProblemInstance &problem,
                         visited.clear_bit(route.get_succ(curr));
                     }
 
+                    vector<uint32_t> random_vec(dimension);
+                    for (size_t i = 0; i < route.route_.size(); ++i) {
+                        random_vec[i] = route.route_[i];
+                    }
+
                     const auto sel_pred = route.get_pred(sel);
 
                     visited.set_bit(sel);
@@ -2006,12 +2011,6 @@ run_raco(const ProblemInstance &problem,
                     double start_rn = omp_get_wtime();
                     route.relocate_node(curr, sel);  // Place sel node just after curr node
                     relocation_time += omp_get_wtime() - start_rn;
-
-                    // vector<uint32_t> random_vec(dimension);
-                    // for (size_t i = 0; i < route.route_.size(); ++i) {
-                    //     random_vec[i] = route.route_[i];
-                    // }
-
 
                     curr_node = sel;
 
@@ -2032,6 +2031,10 @@ run_raco(const ProblemInstance &problem,
                         if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
                     }
                 }
+
+                for (size_t i = 0; i < route.route_.size(); ++i) {
+                        random_vec[i] = route.route_[i];
+                    }
 
                 construction_time += omp_get_wtime() - start_cs;
 
