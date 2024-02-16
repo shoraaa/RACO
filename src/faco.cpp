@@ -2037,9 +2037,12 @@ run_raco(const ProblemInstance &problem,
                     }
                 }
 
-                for (size_t i = 0; i < route.route_.size(); ++i) {
-                        random_vec[i] = route.route_[i];
-                    }
+                uint32_t curr = 0;
+                for (size_t i = 0; i < dimension; ++i) {
+                    route.route_[i] = curr;
+                    route.positions_[curr] = i;
+                    curr = succ[curr];
+                }
 
                 construction_time += omp_get_wtime() - start_cs;
 
