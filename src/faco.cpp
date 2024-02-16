@@ -1976,10 +1976,15 @@ run_raco(const ProblemInstance &problem,
                 auto curr_node = start_node;
                 uint32_t visited_count = 1;
 
-                vector<uint32_t> random_vec(dimension);
-                    for (size_t i = 0; i < route.route_.size(); ++i) {
-                        random_vec[i] = route.route_[i];
-                    }
+                vector<uint32_t> succ(dimension), pred = succ;
+                uint32_t prev = route.route_.back();
+                for (auto& node : route.route_) {
+                    // [prev, node]
+                    succ[prev] = node;
+                    pred[node] = prev;
+                    prev = node;
+                }
+                
 
                 double start_cs = omp_get_wtime();
                 while (new_edges < target_new_edges && visited_count < dimension) {
