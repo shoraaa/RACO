@@ -2022,7 +2022,8 @@ run_raco(const ProblemInstance &problem,
 
                     auto curr = curr_node;
                     if (opt.force_new_edge_) {
-                        visited.set_bit(route.get_succ(curr));
+                        //visited.set_bit(route.get_succ(curr));
+                        visited.set_bit(succ[curr]);
                     }
 
                     double start_snn = omp_get_wtime();
@@ -2035,10 +2036,11 @@ run_raco(const ProblemInstance &problem,
                     select_next_time += omp_get_wtime() - start_snn;
 
                     if (opt.force_new_edge_) {
-                        visited.clear_bit(route.get_succ(curr));
+                        //visited.clear_bit(route.get_succ(curr));
+                        visited.clear_bit(succ[curr]);
                     }
 
-                    const auto sel_pred = route.get_pred(sel);
+                    const auto sel_pred = pred[sel]; //route.get_pred(sel);
 
                     visited.set_bit(sel);
                     ++visited_count;
