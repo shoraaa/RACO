@@ -83,7 +83,7 @@ struct ProgramOptions {
     double tau_min_ = -1;
 
     // Restricted ACO -- number of sub ants
-    double sub_ants_ = 16;
+    double sub_ants_ = 4;
 };
 
 

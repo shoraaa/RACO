@@ -1956,92 +1956,68 @@ run_raco(const ProblemInstance &problem,
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
-                const auto target_new_edges = opt.min_new_edges_;
+                const auto sub_ants = opt.sub_ants_;
 
                 auto &ant = ants[ant_idx];
-                // ant.initialize(dimension);
                 Route route { local_source };  // We use "external" route and only copy it back to ant
 
-                auto start_node = get_rng().next_uint32(dimension);
-                // ant.visit(start_node);
-                visited.clear();
-                visited.set_bit(start_node);
-
-                ls_checklist.clear();
-
-                // We are counting edges (undirected) that are not present in
-                // the source_route. The factual # of new edges can be +1 as we
-                // skip the check for the closing edge (minor optimization).
-                uint32_t new_edges = 0;
-                auto curr_node = start_node;
-                uint32_t visited_count = 1;
-
-                vector<uint32_t> succ(dimension), pred = succ;
-                uint32_t prev = route.route_.back();
-                for (auto& node : route.route_) {
-                    // [prev, node]
-                    succ[prev] = node;
-                    pred[node] = prev;
-                    prev = node;
-                }
-                
-
                 double start_cs = omp_get_wtime();
-                while (new_edges < target_new_edges && visited_count < dimension) {
-                    loop_count += 1;
+                while (sub_ants--) {
+                    auto start_node = get_rng().next_uint32(dimension);
 
-                    auto curr = curr_node;
-                    if (opt.force_new_edge_) {
-                        visited.set_bit(route.get_succ(curr));
+                    visited.clear();
+                    visited.set_bit(start_node);
+
+                    ls_checklist.clear();
+
+                    // We are counting edges (undirected) that are not present in
+                    // the source_route. The factual # of new edges can be +1 as we
+                    // skip the check for the closing edge (minor optimization).
+                    uint32_t new_edges = 0;
+                    auto curr_node = start_node;
+                    uint32_t visited_count = 1;
+                
+                    const auto target_new_edges = opt.min_new_edges_;
+                    while (new_edges < target_new_edges && visited_count < dimension) {
+                        loop_count += 1;
+
+                        auto curr = curr_node;
+                        if (opt.force_new_edge_) {
+                            visited.set_bit(route.get_succ(curr));
+                        }
+
+                        double start_snn = omp_get_wtime();
+                        auto sel = select_next_node(pheromone, heuristic,
+                                                    problem.get_nearest_neighbors(curr, cl_size),
+                                                    nn_product_cache,
+                                                    problem.get_backup_neighbors(curr, cl_size, bl_size),
+                                                    curr,
+                                                    visited);
+                        select_next_time += omp_get_wtime() - start_snn;
+
+                        if (opt.force_new_edge_) {
+                            visited.clear_bit(route.get_succ(curr));
+                        }
+
+                        const auto sel_pred = route.get_pred(sel);
+
+                        visited.set_bit(sel);
+                        ++visited_count;
+
+                        double start_rn = omp_get_wtime();
+                        route.relocate_node(curr, sel);  // Place sel node just after curr node
+                        relocation_time += omp_get_wtime() - start_rn;
+
+                        curr_node = sel;
+
+                        if (!local_source.contains_edge(curr, sel)) {
+                            new_edges += 1;
+
+                            if (!contains(ls_checklist, curr)) { ls_checklist.push_back(curr); }
+                            if (!contains(ls_checklist, sel)) { ls_checklist.push_back(sel); }
+                            if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
+                        }
                     }
-
-                    double start_snn = omp_get_wtime();
-                    auto sel = select_next_node(pheromone, heuristic,
-                                                problem.get_nearest_neighbors(curr, cl_size),
-                                                nn_product_cache,
-                                                problem.get_backup_neighbors(curr, cl_size, bl_size),
-                                                curr,
-                                                visited);
-                    select_next_time += omp_get_wtime() - start_snn;
-
-                    if (opt.force_new_edge_) {
-                        visited.clear_bit(route.get_succ(curr));
-                    }
-
-                    const auto sel_pred = route.get_pred(sel);
-
-                    visited.set_bit(sel);
-                    ++visited_count;
-
-                    double start_rn = omp_get_wtime();
-                    route.relocate_node(curr, sel);  // Place sel node just after curr node
-                    relocation_time += omp_get_wtime() - start_rn;
-
-                    curr_node = sel;
-
-                    if (!local_source.contains_edge(curr, sel)) {
-                        /*
-                        For simplicity and efficiency, we are looking only at
-                        the (curr, sel) edge even though the relocation could
-                        have created additional new edges.
-
-                        Actually, we can have up to 3 new edges, however the
-                        subsequent moves can break some of these, so the final
-                        number can be much smaller.
-                        */
-                        new_edges += 1;
-
-                        if (!contains(ls_checklist, curr)) { ls_checklist.push_back(curr); }
-                        if (!contains(ls_checklist, sel)) { ls_checklist.push_back(sel); }
-                        if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
-                    }
-                }
-
-                uint32_t curr = 0;
-                for (size_t i = 0; i < dimension; ++i) {
-                    route.route_[i] = curr;
-                    route.positions_[curr] = i;
-                    curr = succ[curr];
                 }
 
                 construction_time += omp_get_wtime() - start_cs;
