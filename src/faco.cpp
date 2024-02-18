@@ -1960,12 +1960,12 @@ run_raco(const ProblemInstance &problem,
 
                 auto &ant = ants[ant_idx];
                 Route route { local_source };  // We use "external" route and only copy it back to ant
+                visited.clear();
 
                 double start_cs = omp_get_wtime();
                 while (sub_ants--) {
                     auto start_node = get_rng().next_uint32(dimension);
 
-                    visited.clear();
                     visited.set_bit(start_node);
 
                     ls_checklist.clear();
