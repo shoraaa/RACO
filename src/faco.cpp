@@ -2006,14 +2006,14 @@ run_raco(const ProblemInstance &problem,
                 auto curr_node = start_node;
                 uint32_t visited_count = 1;
 
-                vector<uint32_t> succ(dimension), pred = succ;
-                uint32_t prev = route.route_.back();
-                for (auto& node : route.route_) {
-                    // [prev, node]
-                    succ[prev] = node;
-                    pred[node] = prev;
-                    prev = node;
-                }
+                // vector<uint32_t> succ(dimension), pred = succ;
+                // uint32_t prev = route.route_.back();
+                // for (auto& node : route.route_) {
+                //     // [prev, node]
+                //     succ[prev] = node;
+                //     pred[node] = prev;
+                //     prev = node;
+                // }
                 
 
                 double start_cs = omp_get_wtime();
@@ -2022,8 +2022,8 @@ run_raco(const ProblemInstance &problem,
 
                     auto curr = curr_node;
                     if (opt.force_new_edge_) {
-                        //visited.set_bit(route.get_succ(curr));
-                        visited.set_bit(succ[curr]);
+                        visited.set_bit(route.get_succ(curr));
+                        // visited.set_bit(succ[curr]);
                     }
 
                     double start_snn = omp_get_wtime();
@@ -2036,18 +2036,18 @@ run_raco(const ProblemInstance &problem,
                     select_next_time += omp_get_wtime() - start_snn;
 
                     if (opt.force_new_edge_) {
-                        //visited.clear_bit(route.get_succ(curr));
-                        visited.clear_bit(succ[curr]);
+                        visited.clear_bit(route.get_succ(curr));
+                        // visited.clear_bit(succ[curr]);
                     }
 
-                    const auto sel_pred = pred[sel]; //route.get_pred(sel);
+                    const auto sel_pred = route.get_pred(sel);
 
                     visited.set_bit(sel);
                     ++visited_count;
 
                     double start_rn = omp_get_wtime();
-                    //route.relocate_node(curr, sel);  // Place sel node just after curr node
-                    route.fast_relocate_node(curr, sel, succ, pred);
+                    route.relocate_node(curr, sel);  // Place sel node just after curr node
+                    // route.fast_relocate_node(curr, sel, succ, pred);
 
                     relocation_time += omp_get_wtime() - start_rn;
 
@@ -2071,12 +2071,12 @@ run_raco(const ProblemInstance &problem,
                     }
                 }
 
-                uint32_t curr = 0;
-                for (size_t i = 0; i < dimension; ++i) {
-                    route.route_[i] = curr;
-                    route.positions_[curr] = i;
-                    curr = succ[curr];
-                }
+                // uint32_t curr = 0;
+                // for (size_t i = 0; i < dimension; ++i) {
+                //     route.route_[i] = curr;
+                //     route.positions_[curr] = i;
+                //     curr = succ[curr];
+                // }
 
                 construction_time += omp_get_wtime() - start_cs;
 
