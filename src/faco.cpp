@@ -1956,7 +1956,7 @@ run_raco(const ProblemInstance &problem,
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
-                const auto sub_ants = opt.sub_ants_;
+                auto sub_ants = opt.sub_ants_;
 
                 auto &ant = ants[ant_idx];
                 Route route { local_source };  // We use "external" route and only copy it back to ant
