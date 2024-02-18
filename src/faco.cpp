@@ -933,6 +933,36 @@ public:
                  + cost_fn_(node, target_succ);
     }
 
+    void fast_relocate_node(uint32_t target, uint32_t node, vector<uint32_t>& succ, vector<uint32_t>& pred) {
+        assert(node != target);
+        assert(node < route_.size());
+        assert(target < route_.size());
+
+        if (get_succ(target) == node) { return ; }
+
+        const auto node_pred = pred[node];
+        const auto node_succ = succ[node];
+        const auto target_succ = succ[target];
+
+        succ[node_pred] = node_succ;
+        pred[node_succ] = node_pred;
+
+        succ[target] = node;
+        pred[node] = target;
+
+        succ[node] = target_succ;
+        pred[target_succ] = node;
+
+        // We are removing these edges:
+        cost_ += - cost_fn_(node_pred, node)
+                 - cost_fn_(node, node_succ)
+                 - cost_fn_(target, target_succ)
+                 + cost_fn_(node_pred, node_succ)
+                 + cost_fn_(target, node)
+                 + cost_fn_(node, target_succ);
+    }
+
+
     size_t size() const { return route_.size(); }
 
     uint32_t operator[](uint32_t index) const {
@@ -2014,7 +2044,9 @@ run_raco(const ProblemInstance &problem,
                     ++visited_count;
 
                     double start_rn = omp_get_wtime();
-                    route.relocate_node(curr, sel);  // Place sel node just after curr node
+                    //route.relocate_node(curr, sel);  // Place sel node just after curr node
+                    route.fast_relocate_node(curr, sel, succ, pred);
+
                     relocation_time += omp_get_wtime() - start_rn;
 
                     curr_node = sel;
