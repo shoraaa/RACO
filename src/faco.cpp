@@ -2006,14 +2006,14 @@ run_raco(const ProblemInstance &problem,
                 auto curr_node = start_node;
                 uint32_t visited_count = 1;
 
-                // vector<uint32_t> succ(dimension), pred = succ;
+                // vector<[uint32_t> succ(dimension), pred = succ;
                 // uint32_t prev = route.route_.back();
                 // for (auto& node : route.route_) {
                 //     // [prev, node]
                 //     succ[prev] = node;
                 //     pred[node] = prev;
                 //     prev = node;
-                // }
+                // }]
                 
 
                 double start_cs = omp_get_wtime();
@@ -2022,7 +2022,9 @@ run_raco(const ProblemInstance &problem,
 
                     auto curr = curr_node;
                     if (opt.force_new_edge_) {
-                        visited.set_bit(route.get_succ(curr));
+                        visited.set_bit(local_source.get_succ(curr));
+                        visited.set_bit(local_source.get_pred(curr));
+                        //visited.set_bit(route.get_succ(curr));
                         // visited.set_bit(succ[curr]);
                     }
 
@@ -2036,7 +2038,9 @@ run_raco(const ProblemInstance &problem,
                     select_next_time += omp_get_wtime() - start_snn;
 
                     if (opt.force_new_edge_) {
-                        visited.clear_bit(route.get_succ(curr));
+                        visited.clear_bit(local_source.get_succ(curr));
+                        visited.clear_bit(local_source.get_pred(curr));
+                        // visited.clear_bit(route.get_succ(curr));
                         // visited.clear_bit(succ[curr]);
                     }
 
