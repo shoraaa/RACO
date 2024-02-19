@@ -2007,7 +2007,7 @@ run_raco(const ProblemInstance &problem,
                     route.relocate_node(curr, sel);  // Place sel node just after curr node
                     relocation_time += omp_get_wtime() - start_rn;
 
-                    curr_node = get_rng().next_uint32(dimension);
+                    curr_node = sel;
 
                     if (!local_source.contains_edge(curr, sel)) {
                         /*
@@ -2024,6 +2024,8 @@ run_raco(const ProblemInstance &problem,
                         if (!contains(ls_checklist, curr)) { ls_checklist.push_back(curr); }
                         if (!contains(ls_checklist, sel)) { ls_checklist.push_back(sel); }
                         if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
+
+                        curr_node = get_rng().next_uint32(dimension);
                     }
                 }
 
