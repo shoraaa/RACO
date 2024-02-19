@@ -2402,11 +2402,6 @@ run_dynamic_raco(const ProblemInstance &problem,
                     }
                 }
 
-                // if (iteration % 1000 == 0) {
-                //     auto error = problem.calc_relative_error(best_ant->cost_);
-                //     best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
-                // }
-
                 mean_cost_trace.add(round(sample_mean(sol_costs), 1), iteration);
                 stdev_cost_trace.add(round(sample_stdev(sol_costs), 1), iteration);
 
@@ -2440,7 +2435,7 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                 source_solution->update(update_ant.route_, update_ant.cost_);
 
-                if (iteration % steps == 0 && iteration != iterations) {
+                if (iteration % steps == 0 && ants_count * 2 < 2000 && iteration != iterations) {
                     const auto current_ants_count = ants_count;
                     ants_count *= 2;
                     ants.resize(ants_count);
