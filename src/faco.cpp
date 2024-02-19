@@ -2364,22 +2364,22 @@ run_dynamic_raco(const ProblemInstance &problem,
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
-                if (!opt.keep_better_ant_sol_ 
-                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
-                    ant.cost_  = route.cost_;
-                    ant.route_ = route.route_;
+                // if (!opt.keep_better_ant_sol_ 
+                //         || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
+                //     ant.cost_  = route.cost_;
+                //     ant.route_ = route.route_;
 
-                    ++ant_sol_updates;
-                }
+                //     ++ant_sol_updates;
+                // }
 
-                // We can benefit immediately from the improved solution by
-                // updating the current local source solution.
-                if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
-                    local_source = Route{ route.route_, problem.get_distance_fn() };
-                    local_source.cost_ = route.cost_;
+                // // We can benefit immediately from the improved solution by
+                // // updating the current local source solution.
+                // if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
+                //     local_source = Route{ route.route_, problem.get_distance_fn() };
+                //     local_source.cost_ = route.cost_;
 
-                    ++local_source_sol_updates;
-                }
+                //     ++local_source_sol_updates;
+                // }
                 sol_costs[ant_idx] = ant.cost_;
             }
 
