@@ -1922,6 +1922,8 @@ run_raco(const ProblemInstance &problem,
     double relocation_time = 0;
     uint32_t loop_count = 0;
 
+    auto min_new_edges = opt.min_new_edges_;
+
     #pragma omp parallel default(shared)
     {
         // Endpoints of new edges (not present in source_route) are inserted
@@ -1956,7 +1958,7 @@ run_raco(const ProblemInstance &problem,
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
-                const auto target_new_edges = opt.min_new_edges_;
+                const auto target_new_edges = min_new_edges;
 
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
@@ -2024,8 +2026,6 @@ run_raco(const ProblemInstance &problem,
                         if (!contains(ls_checklist, curr)) { ls_checklist.push_back(curr); }
                         if (!contains(ls_checklist, sel)) { ls_checklist.push_back(sel); }
                         if (!contains(ls_checklist, sel_pred)) { ls_checklist.push_back(sel_pred); }
-
-                        curr_node = get_rng().next_uint32(dimension);
                     }
                 }
 
@@ -2124,10 +2124,10 @@ run_raco(const ProblemInstance &problem,
 
                 source_solution->update(update_ant.route_, update_ant.cost_);
 
-                // if (iteration == 10000) {
-                //     model.trail_limits_.min_ = 0.005;
-                //     cout << "lowered tau-min" << endl;
-                // }
+                if (iteration == 10000) {
+                    min_new_edges = 8;
+                    cout << "increased mne" << endl;
+                }
             }
         }
     }
