@@ -2121,6 +2121,11 @@ run_raco(const ProblemInstance &problem,
                 pher_deposition_time += omp_get_wtime() - start;
 
                 source_solution->update(update_ant.route_, update_ant.cost_);
+
+                if (iteration == 10000) {
+                    model.trail_limits_.min_ = 0.005;
+                    cout << "lowered tau-min" << endl;
+                }
             }
         }
     }
