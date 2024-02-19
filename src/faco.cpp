@@ -1840,7 +1840,6 @@ run_raco(const ProblemInstance &problem,
     const auto dimension  = problem.dimension_;  
     const auto cl_size    = opt.cand_list_size_;
     const auto bl_size    = opt.backup_list_size_;
-    const auto ants_count = opt.ants_count_;
     const auto iterations = opt.iterations_;
     const auto use_ls     = opt.local_search_ != 0;
 
@@ -1893,6 +1892,7 @@ run_raco(const ProblemInstance &problem,
 
     auto best_ant = make_unique<Ant>(start_route, initial_cost);
 
+    auto ants_count = opt.ants_count_;
     const auto actual_ants_count = ants_count * (1 << 3);
 
     vector<Ant> ants(actual_ants_count);
@@ -1933,16 +1933,7 @@ run_raco(const ProblemInstance &problem,
 
         const auto forth = iterations / 4;
 
-        for (int32_t iteration = 0 ; iteration < iterations ; ++iteration) {
-            #pragma omp barrier
-
-            #pragma omp master
-            {
-                if (iteration % forth == 0) {
-                    ants_count *= 2;
-                }
-            }
-
+        for (int32_t iteration = 1 ; iteration <= iterations ; ++iteration) {
             #pragma omp barrier
 
             // Load pheromone * heuristic for each edge connecting nearest
@@ -2136,6 +2127,10 @@ run_raco(const ProblemInstance &problem,
                 pher_deposition_time += omp_get_wtime() - start;
 
                 source_solution->update(update_ant.route_, update_ant.cost_);
+
+                if (iteration % forth == 0) {
+                    ants_count *= 2;
+                }
             }
         }
     }
