@@ -1893,7 +1893,9 @@ run_raco(const ProblemInstance &problem,
 
     auto best_ant = make_unique<Ant>(start_route, initial_cost);
 
-    vector<Ant> ants(ants_count);
+    const auto actual_ants_count = ants_count * (1 << 3);
+
+    vector<Ant> ants(actual_ants_count);
     for (auto &ant : ants) {
         ant = *best_ant;
     }
@@ -1909,7 +1911,7 @@ run_raco(const ProblemInstance &problem,
     Trace<ComputationsLog_t, double> stdev_cost_trace(comp_log, "sol cost stdev", iterations, 20);
     Timer main_timer;
 
-    vector<double> sol_costs(ants_count);
+    vector<double> sol_costs(actual_ants_count);
 
     double  pher_deposition_time = 0;
     int32_t ant_sol_updates = 0;
@@ -1929,7 +1931,18 @@ run_raco(const ProblemInstance &problem,
         vector<uint32_t> ls_checklist;
         ls_checklist.reserve(dimension);
 
+        const auto forth = iterations / 4;
+
         for (int32_t iteration = 0 ; iteration < iterations ; ++iteration) {
+            #pragma omp barrier
+
+            #pragma omp master
+            {
+                if (iteration % forth == 0) {
+                    ants_count *= 2;
+                }
+            }
+
             #pragma omp barrier
 
             // Load pheromone * heuristic for each edge connecting nearest
@@ -1955,7 +1968,7 @@ run_raco(const ProblemInstance &problem,
             // the same path -- i.e. if we run the program with the same PRNG
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
-            for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
+            for (uint32_t ant_idx = 0; ant_idx < ants_count; ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
                 auto &ant = ants[ant_idx];
@@ -2069,7 +2082,8 @@ run_raco(const ProblemInstance &problem,
             #pragma omp master
             {
                 iteration_best = &ants.front();
-                for (auto &ant : ants) {
+                for (uint32_t ant_idx = 0; ant_idx < ants_count; ++ant_idx) {
+                    auto &ant = ants[ant_idx];
                     if (ant.cost_ < iteration_best->cost_) {
                         iteration_best = &ant;
                     }
@@ -2092,6 +2106,7 @@ run_raco(const ProblemInstance &problem,
 
                 mean_cost_trace.add(round(sample_mean(sol_costs), 1), iteration);
                 stdev_cost_trace.add(round(sample_stdev(sol_costs), 1), iteration);
+
             }
 
             // Synchronize threads before pheromone update
