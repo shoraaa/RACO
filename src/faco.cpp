@@ -1895,7 +1895,7 @@ run_raco(const ProblemInstance &problem,
     auto ants_count = opt.ants_count_;
     const auto steps = opt.steps_;
     const auto actual_ants_count = ants_count * (1 << ((iterations + steps - 1) / steps));
-    cout << "Steps: " steps << ", actual ants count: " << actual_ants_count << endl;
+    cout << "Steps: " << steps << ", actual ants count: " << actual_ants_count << endl;
 
     vector<Ant> ants(actual_ants_count);
     for (auto &ant : ants) {
