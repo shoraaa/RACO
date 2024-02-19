@@ -2222,6 +2222,9 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     vector<double> sol_costs(ants_count);
 
+    // ants.reserve(actual_ants_count);
+    // sol_costs.reserve(actual_ants_count);
+
     double  pher_deposition_time = 0;
     int32_t ant_sol_updates = 0;
     int32_t local_source_sol_updates = 0;
