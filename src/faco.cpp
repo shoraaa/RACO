@@ -2124,10 +2124,6 @@ run_raco(const ProblemInstance &problem,
 
                 source_solution->update(update_ant.route_, update_ant.cost_);
 
-                if (iteration == 10000) {
-                    min_new_edges = 8;
-                    cout << "increased mne" << endl;
-                }
             }
         }
     }
