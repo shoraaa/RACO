@@ -2264,7 +2264,7 @@ run_dynamic_raco(const ProblemInstance &problem,
             local_source.cost_ = source_solution->cost_;
 
             //Mask visited(dimension);
-            Bitmask visited(dimension);
+            // Bitmask visited(dimension);
 
             // Changing schedule from "static" to "dynamic" can speed up
             // computations a bit, however it introduces non-determinism due to
@@ -2276,8 +2276,12 @@ run_dynamic_raco(const ProblemInstance &problem,
                 const auto target_new_edges = opt.min_new_edges_;
 
                 auto &ant = ants[ant_idx];
+                auto &visited = ant.visited_bitmask_;
                 // ant.initialize(dimension);
-                Route route { local_source };  // We use "external" route and only copy it back to ant
+                // Route route { local_source };  // We use "external" route and only copy it back to ant
+                ant.route_ = local_source.route_;
+                ant.cost_ = local_source.cost_;
+                ant.cost_fn_ = problem.get_distance_fn();
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -2345,10 +2349,6 @@ run_dynamic_raco(const ProblemInstance &problem,
                 }
 
                 construction_time += omp_get_wtime() - start_cs;
-
-                if (opt.count_new_edges_) {  // How many new edges are in the new sol. actually?
-                    total_new_edges += count_diff_edges(route, local_source);
-                }
 
                 if (use_ls) {
                     double start = omp_get_wtime();
