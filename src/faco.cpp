@@ -2264,7 +2264,7 @@ run_dynamic_raco(const ProblemInstance &problem,
             local_source.cost_ = source_solution->cost_;
 
             //Mask visited(dimension);
-            // Bitmask visited(dimension);
+            Bitmask visited(dimension);
 
             // Changing schedule from "static" to "dynamic" can speed up
             // computations a bit, however it introduces non-determinism due to
@@ -2276,12 +2276,8 @@ run_dynamic_raco(const ProblemInstance &problem,
                 const auto target_new_edges = opt.min_new_edges_;
 
                 auto &ant = ants[ant_idx];
-                auto &visited = ant.visited_bitmask_;
                 // ant.initialize(dimension);
-                // Route route { local_source };  // We use "external" route and only copy it back to ant
-                ant.route_ = local_source.route_;
-                ant.cost_ = local_source.cost_;
-                ant.cost_fn_ = problem.get_distance_fn();
+                Route route { local_source };  // We use "external" route and only copy it back to ant
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -2303,7 +2299,7 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                     auto curr = curr_node;
                     if (opt.force_new_edge_) {
-                        visited.set_bit(ant.get_succ(curr));
+                        visited.set_bit(route.get_succ(curr));
                     }
 
                     double start_snn = omp_get_wtime();
@@ -2316,16 +2312,16 @@ run_dynamic_raco(const ProblemInstance &problem,
                     select_next_time += omp_get_wtime() - start_snn;
 
                     if (opt.force_new_edge_) {
-                        visited.clear_bit(ant.get_succ(curr));
+                        visited.clear_bit(route.get_succ(curr));
                     }
 
-                    const auto sel_pred = ant.get_pred(sel);
+                    const auto sel_pred = route.get_pred(sel);
 
                     visited.set_bit(sel);
                     ++visited_count;
 
                     double start_rn = omp_get_wtime();
-                    ant.relocate_node(curr, sel);  // Place sel node just after curr node
+                    route.relocate_node(curr, sel);  // Place sel node just after curr node
                     relocation_time += omp_get_wtime() - start_rn;
 
                     curr_node = sel;
@@ -2350,28 +2346,37 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                 construction_time += omp_get_wtime() - start_cs;
 
+                if (opt.count_new_edges_) {  // How many new edges are in the new sol. actually?
+                    total_new_edges += count_diff_edges(route, local_source);
+                }
+
                 if (use_ls) {
                     double start = omp_get_wtime();
-                    ant.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
+                    route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                     ls_time += omp_get_wtime() - start;
                 }
+
+                // No need to recalculate route length -- we are updating it along with the changes
+                // resp. to the current local source solution
+                // ant.cost_ = problem.calculate_route_length(route.route_);
+                assert( abs(problem.calculate_route_length(route.route_) - route.cost_) < 1e-6 );
 
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
-                // if (!opt.keep_better_ant_sol_ 
-                //         || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
-                //     ant.cost_  = route.cost_;
-                //     ant.route_ = route.route_;
+                if (!opt.keep_better_ant_sol_ 
+                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
+                    ant.cost_  = route.cost_;
+                    ant.route_ = route.route_;
 
-                //     ++ant_sol_updates;
-                // }
+                    ++ant_sol_updates;
+                }
 
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
-                if (opt.source_sol_local_update_ && ant.cost_ < local_source.cost_) {
-                    local_source = Route{ ant.route_, problem.get_distance_fn() };
-                    local_source.cost_ = ant.cost_;
+                if (opt.source_sol_local_update_ && route.cost_ < local_source.cost_) {
+                    local_source = Route{ route.route_, problem.get_distance_fn() };
+                    local_source.cost_ = route.cost_;
 
                     ++local_source_sol_updates;
                 }
@@ -2430,7 +2435,7 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                 source_solution->update(update_ant.route_, update_ant.cost_);
 
-                if (iteration % steps == 0 && ants_count * 2 < 2000 && iteration != iterations) {
+                if (iteration % steps == 0 && iteration != iterations) {
                     const auto current_ants_count = ants_count;
                     ants_count *= 2;
                     ants.resize(ants_count);
