@@ -2130,6 +2130,7 @@ run_raco(const ProblemInstance &problem,
 
                 if (iteration % forth == 0) {
                     ants_count *= 2;
+                    cout << "Doubled Ants Count, Current Ants Count = " << ants_count << endl;
                 }
             }
         }
