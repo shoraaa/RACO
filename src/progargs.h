@@ -84,6 +84,9 @@ struct ProgramOptions {
 
     // Restricted ACO -- number of sub ants
     double sub_ants_ = 4;
+
+    // doubled steps
+    int32_t steps_ = 4000;
 };
 
 
@@ -117,6 +120,7 @@ void dump(const ProgramOptions &opt, MapT &map) {
     map["smooth"] = opt.smooth_;
     map["tau min"] = opt.tau_min_;
     map["sub ants"] = opt.sub_ants_;
+    map["steps"] = opt.steps_;
 }
 
 ProgramOptions parse_program_options(int argc, char *argv[]);

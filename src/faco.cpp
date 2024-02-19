@@ -1893,12 +1893,15 @@ run_raco(const ProblemInstance &problem,
     auto best_ant = make_unique<Ant>(start_route, initial_cost);
 
     auto ants_count = opt.ants_count_;
-    const auto actual_ants_count = ants_count * (1 << 3);
+    const auto steps = opt.steps_;
+    const auto actual_ants_count = ants_count * (1 << ((iterations + steps - 1) / steps));
+    cout << "Steps: " steps << ", actual ants count: " << actual_ants_count << endl;
 
     vector<Ant> ants(actual_ants_count);
     for (auto &ant : ants) {
         ant = *best_ant;
     }
+
 
     Ant *iteration_best = nullptr;
 
@@ -1930,8 +1933,6 @@ run_raco(const ProblemInstance &problem,
         // into ls_checklist and later used to guide local search
         vector<uint32_t> ls_checklist;
         ls_checklist.reserve(dimension);
-
-        const auto forth = iterations / 4;
 
         for (int32_t iteration = 1 ; iteration <= iterations ; ++iteration) {
             #pragma omp barrier
@@ -2128,7 +2129,7 @@ run_raco(const ProblemInstance &problem,
 
                 source_solution->update(update_ant.route_, update_ant.cost_);
 
-                if (iteration % forth == 0) {
+                if (iteration % steps == 0) {
                     ants_count *= 2;
                     cout << "Doubled Ants Count, Current Ants Count = " << ants_count << endl;
                 }

@@ -116,6 +116,8 @@ ProgramOptions parse_program_options(int argc, char *argv[]) {
 
     p.add("sub-ants", "number of sub ants", opts.sub_ants_);
 
+    p.add("steps", "steps in which ants get doubled", opts.steps_);
+
     p.parse(argc, argv);
 
     return opts;
