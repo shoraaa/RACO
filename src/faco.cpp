@@ -2274,7 +2274,7 @@ int main(int argc, char *argv[]) {
 
             // Write the results computed so far to a file -- this prevents
             // losing data in case of an unexpected program termination
-            exp_log("trial mean cost", sample_mean(costs));
+            exp_log("trial mean cost", static_cast<int64_t>(sample_mean(costs)));
             exp_log("trial mean error", problem.calc_relative_error(sample_mean(costs)));
 
             auto min_cost = *min_element(begin(costs), end(costs));
