@@ -2232,6 +2232,7 @@ int main(int argc, char *argv[]) {
         dump(args, experiment_record["args"]);
         experiment_record["executions"] = json::array();
         vector<double> costs;
+        vector<double> times;
 
         Timer trial_timer;
         std::string res_filepath{};
@@ -2250,7 +2251,8 @@ int main(int argc, char *argv[]) {
                 abort();
             }
 
-            exlog("execution time", execution_timer());
+            const auto execution_time = execution_timer();
+            exlog("execution time", execution_time);
             exlog("finished_at", get_current_datetime_string("-", ":", "T", true));
             exlog("final cost", result->cost_);
             exlog("final error", problem.calc_relative_error(result->cost_));
@@ -2258,6 +2260,7 @@ int main(int argc, char *argv[]) {
             experiment_record["executions"].emplace_back(execution_log);
 
             costs.push_back(result->cost_);
+            times.push_back(execution_time);
 
             bool is_last_execution = (i + 1 == args.repeat_);
             if (is_last_execution) {
@@ -2284,6 +2287,8 @@ int main(int argc, char *argv[]) {
             auto max_cost = *max_element(begin(costs), end(costs));
             exp_log("trial max cost", static_cast<int64_t>(max_cost));
             exp_log("trial max error", problem.calc_relative_error(max_cost));
+
+            exp_log("trial mean time", static_cast<int64_t>(sample_mean(times)));
 
             if (costs.size() > 1) {
                 exp_log("trial stdev cost", sample_stdev(costs));
