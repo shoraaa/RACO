@@ -2517,7 +2517,9 @@ run_dynamic_raco(const ProblemInstance &problem,
     comp_log("local search time", ls_time);
     comp_log("loop count", loop_count);
 
-    return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
+    auto result = make_unique<Solution>(best_ant->route_, best_ant->cost_);
+
+    return result;
 }
 
 
