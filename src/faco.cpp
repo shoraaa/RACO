@@ -2196,7 +2196,7 @@ run_raco(const ProblemInstance &problem,
 }
 
 template<typename ComputationsLog_t>
-std::unique_ptr<Solution> 
+std::unique_ptr<Route> 
 run_dynamic_raco(const ProblemInstance &problem,
                 const ProgramOptions &opt,
                 ComputationsLog_t &comp_log) {
