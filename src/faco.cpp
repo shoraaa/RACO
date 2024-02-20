@@ -2229,7 +2229,7 @@ run_dynamic_raco(const ProblemInstance &problem,
     Ant *iteration_best = nullptr;
 
     auto source_solution = make_unique<Route>(start_route, cost_fn);
-    source_solution.cost_ = best_ant->cost_;
+    source_solution->cost_ = best_ant->cost_;
 
     // The following are mainly for raporting purposes
     Trace<ComputationsLog_t, SolutionCost> best_cost_trace(comp_log,
