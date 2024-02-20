@@ -1979,8 +1979,6 @@ run_raco(const ProblemInstance &problem,
     double relocation_time = 0;
     uint32_t loop_count = 0;
 
-    auto min_new_edges = opt.min_new_edges_;
-
     #pragma omp parallel default(shared)
     {
         // Endpoints of new edges (not present in source_route) are inserted
