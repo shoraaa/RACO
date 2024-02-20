@@ -291,6 +291,8 @@ public:
         trail_limits_.min_ = tau_min_ != -1 ? tau_min_ : 1.0 / pow(problem_.dimension_, 1.0 / 4);
         deposit_smooth_ = rho_ * (trail_limits_.max_ - trail_limits_.min_);
         cout << "Rho: " << rho_ << endl;
+        cout << "Delta Min: " << rho_ * trail_limits_.min_ << endl;
+        cout << "-Delta Min + Delta Max: " << deposit_smooth_ << endl;
         get_pheromone().init_smooth(rho_ * trail_limits_.min_);
     }
     void evaporate_pheromone() {
