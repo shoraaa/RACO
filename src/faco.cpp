@@ -2436,6 +2436,9 @@ run_dynamic_raco(const ProblemInstance &problem,
             {
                 bool use_best_ant = (get_rng().next_float() < opt.gbest_as_source_prob_);
                 auto &update_ant = use_best_ant ? *best_ant : *iteration_best;
+                if (update_ant.cost_ > source_solution->cost_) {
+                    update_ant = *source_solution;
+                }
 
                 double start = omp_get_wtime();
 
