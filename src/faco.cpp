@@ -573,6 +573,14 @@ run_focused_aco(const ProblemInstance &problem,
     const auto iterations = opt.iterations_;
     const auto use_ls     = opt.local_search_ != 0;
 
+    auto min_new_edges = opt.min_new_edges_;
+    if (min_new_edges == -1) {
+        if (dimension <= 10000) min_new_edges = 32;
+        else if (dimension <= 20000) min_new_edges = 16;
+        else if (dimension <= 40000) min_new_edges = 8;
+        else min_new_edges = 4;
+    }
+
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
     auto start_sol_count = start_routes.size();
@@ -666,7 +674,7 @@ run_focused_aco(const ProblemInstance &problem,
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : select_next_node_calls)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
-                uint32_t target_new_edges = opt.min_new_edges_;
+                uint32_t target_new_edges = min_new_edges;
 
                 auto &ant = ants[ant_idx];
                 ant.initialize(dimension);
@@ -1330,6 +1338,14 @@ run_mfaco(const ProblemInstance &problem,
     const auto iterations = opt.iterations_;
     const auto use_ls     = opt.local_search_ != 0;
 
+    auto min_new_edges = opt.min_new_edges_;
+    if (min_new_edges == -1) {
+        if (dimension <= 10000) min_new_edges = 32;
+        else if (dimension <= 20000) min_new_edges = 16;
+        else if (dimension <= 40000) min_new_edges = 8;
+        else min_new_edges = 4;
+    }
+
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
     auto start_sol_count = start_routes.size();
@@ -1430,7 +1446,7 @@ run_mfaco(const ProblemInstance &problem,
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants.size(); ++ant_idx) {
-                const auto target_new_edges = opt.min_new_edges_;
+                const auto target_new_edges = min_new_edges;
 
                 auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
@@ -1877,6 +1893,14 @@ run_raco(const ProblemInstance &problem,
     const auto iterations = opt.iterations_;
     const auto use_ls     = opt.local_search_ != 0;
 
+    auto min_new_edges = opt.min_new_edges_;
+    if (min_new_edges == -1) {
+        if (dimension <= 10000) min_new_edges = 32;
+        else if (dimension <= 20000) min_new_edges = 16;
+        else if (dimension <= 40000) min_new_edges = 8;
+        else min_new_edges = 4;
+    }
+
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
     auto start_sol_count = start_routes.size();
@@ -2186,6 +2210,14 @@ run_dynamic_raco(const ProblemInstance &problem,
     const auto use_ls     = opt.local_search_ != 0;
     const auto cost_fn = problem.get_distance_fn();
 
+    auto min_new_edges = opt.min_new_edges_;
+    if (min_new_edges == -1) {
+        if (dimension <= 10000) min_new_edges = 32;
+        else if (dimension <= 20000) min_new_edges = 16;
+        else if (dimension <= 40000) min_new_edges = 8;
+        else min_new_edges = 4;
+    }
+
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
     auto start_sol_count = start_routes.size();
@@ -2309,7 +2341,7 @@ run_dynamic_raco(const ProblemInstance &problem,
             // seed (--seed X) then we get exactly the same results.
             #pragma omp for schedule(static, 1) reduction(+ : loop_count, relocation_time, select_next_time, construction_time, ls_time, ant_sol_updates, local_source_sol_updates, total_new_edges)
             for (uint32_t ant_idx = 0; ant_idx < ants_count; ++ant_idx) {
-                const auto target_new_edges = opt.min_new_edges_;
+                const auto target_new_edges = min_new_edges;
 
                 auto &route = ants[ant_idx];
                 route = Route {local_source};
