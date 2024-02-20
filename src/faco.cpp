@@ -2154,6 +2154,7 @@ run_dynamic_raco(const ProblemInstance &problem,
     const auto bl_size    = opt.backup_list_size_;
     const auto iterations = opt.iterations_;
     const auto use_ls     = opt.local_search_ != 0;
+    // const auto cost_fn = problem
 
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
@@ -2395,7 +2396,7 @@ run_dynamic_raco(const ProblemInstance &problem,
                     }
                 }
                 if (iteration_best->cost_ < best_ant->cost_) {
-                    // best_ant->update(iteration_best->route_, iteration_best->cost_);
+                    best_ant->update(iteration_best->route_, iteration_best->cost_);
 
                     auto error = problem.calc_relative_error(best_ant->cost_);
                     best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
@@ -2430,11 +2431,6 @@ run_dynamic_raco(const ProblemInstance &problem,
                 // source_solution
                 if (opt.smooth_) {
                     model.deposit_pheromone_smooth(update_ant);
-                    for (auto &ant : ants) {
-                        if (ant.cost_ < source_solution->cost_) {
-                            model.deposit_pheromone_smooth(ant);
-                        }
-                    }
                 } else {
                     model.deposit_pheromone(update_ant);
                 }
