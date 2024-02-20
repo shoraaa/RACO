@@ -253,6 +253,7 @@ class Route {
 public:
     using CostFunction = std::function<double (uint32_t, uint32_t)>;
 
+    Route() = default;
 
     Route(std::vector<uint32_t> route, CostFunction fn)
         : route_(route),
