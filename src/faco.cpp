@@ -2196,7 +2196,7 @@ run_raco(const ProblemInstance &problem,
 }
 
 template<typename ComputationsLog_t>
-std::unique_ptr<Route> 
+std::unique_ptr<Solution> 
 run_dynamic_raco(const ProblemInstance &problem,
                 const ProgramOptions &opt,
                 ComputationsLog_t &comp_log) {
@@ -2517,7 +2517,7 @@ run_dynamic_raco(const ProblemInstance &problem,
     comp_log("local search time", ls_time);
     comp_log("loop count", loop_count);
 
-    return unique_ptr<Route>(dynamic_cast<Route*>(best_ant.release()));
+    return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
 }
 
 
