@@ -329,27 +329,6 @@ public:
             prev_node = node;
         }
     }
-
-    double deposit_pheromone(const Route &sol) {
-        const double deposit = 1.0 / sol.cost_;
-        auto prev_node = sol.route_.back();
-        auto &pheromone = get_pheromone();
-        for (auto node : sol.route_) {
-            // The global update of the pheromone trails
-            pheromone.increase(prev_node, node, deposit, trail_limits_.max_);
-            prev_node = node;
-        }
-        return deposit;
-    }
-
-    void deposit_pheromone_smooth(const Route &sol) {
-        auto prev_node = sol.route_.back();
-        auto &pheromone = get_pheromone();
-        for (auto node : sol.route_) {
-            pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
-            prev_node = node;
-        }
-    }
 };
 
 class MatrixModel : public ACOModel<MatrixModel> {
@@ -891,15 +870,6 @@ public:
           cost_fn_(fn)
     {
         positions_.resize(route.size());
-        uint32_t pos = 0;
-        for (auto node : route) {
-            positions_[node] = pos++;
-        }
-    }
-
-    void update(const std::vector<uint32_t> &route, double cost) {
-        route_ = route;
-        cost_ = cost;
         uint32_t pos = 0;
         for (auto node : route) {
             positions_[node] = pos++;
@@ -2184,7 +2154,6 @@ run_dynamic_raco(const ProblemInstance &problem,
     const auto bl_size    = opt.backup_list_size_;
     const auto iterations = opt.iterations_;
     const auto use_ls     = opt.local_search_ != 0;
-    const auto cost_fn = problem.get_distance_fn();
 
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
@@ -2233,24 +2202,22 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     vector<double> nn_product_cache(dimension * cl_size);
 
-    auto best_ant = make_unique<Route>(start_route, cost_fn);
-    best_ant->cost_ = initial_cost;
+    auto best_ant = make_unique<Ant>(start_route, initial_cost);
 
     auto ants_count = opt.ants_count_;
     const auto steps = opt.steps_;
     const auto actual_ants_count = ants_count * (1 << ((iterations + steps - 1) / steps - 1));
     cout << "Steps: " << steps << ", actual ants count: " << actual_ants_count << endl;
 
-    vector<Route> ants(ants_count);
+    vector<Ant> ants(ants_count);
     for (auto &ant : ants) {
         ant = *best_ant;
     }
 
 
-    Route *iteration_best = nullptr;
+    Ant *iteration_best = nullptr;
 
-    auto source_solution = make_unique<Route>(start_route, cost_fn);
-    source_solution->cost_ = best_ant->cost_;
+    auto source_solution = make_unique<Solution>(start_route, best_ant->cost_);
 
     // The following are mainly for raporting purposes
     Trace<ComputationsLog_t, SolutionCost> best_cost_trace(comp_log,
@@ -2277,10 +2244,8 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     #pragma omp parallel default(shared)
     {
-        // Endpoints of new edges (not present in source_route) are inserted
-        // into ls_checklist and later used to guide local search
         vector<uint32_t> ls_checklist;
-        ls_checklist.reserve(dimension);
+        ls_checklist.reserve(128);
 
         for (int32_t iteration = 1 ; iteration <= iterations ; ++iteration) {
             #pragma omp barrier
@@ -2311,17 +2276,16 @@ run_dynamic_raco(const ProblemInstance &problem,
             for (uint32_t ant_idx = 0; ant_idx < ants_count; ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
-                auto &route = ants[ant_idx];
-                route = Route {local_source};
+                auto &ant = ants[ant_idx];
                 // ant.initialize(dimension);
-                // Route route { local_source };  // We use "external" route and only copy it back to ant
+                Route route { local_source };  // We use "external" route and only copy it back to ant
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
+
+                auto visited = ant.visited_bitmask_;
                 visited.clear();
                 visited.set_bit(start_node);
-
-                ls_checklist.clear();
 
                 // We are counting edges (undirected) that are not present in
                 // the source_route. The factual # of new edges can be +1 as we
@@ -2401,13 +2365,13 @@ run_dynamic_raco(const ProblemInstance &problem,
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
-                // if (!opt.keep_better_ant_sol_ 
-                //         || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
-                //     ant.cost_  = route.cost_;
-                //     ant.route_ = route.route_;
+                if (!opt.keep_better_ant_sol_ 
+                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
+                    ant.cost_  = route.cost_;
+                    ant.route_ = route.route_;
 
-                //     ++ant_sol_updates;
-                // }
+                    ++ant_sol_updates;
+                }
 
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
@@ -2417,7 +2381,7 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                     ++local_source_sol_updates;
                 }
-                sol_costs[ant_idx] = route.cost_;
+                sol_costs[ant_idx] = ant.cost_;
             }
 
             #pragma omp master
@@ -2457,9 +2421,6 @@ run_dynamic_raco(const ProblemInstance &problem,
             {
                 bool use_best_ant = (get_rng().next_float() < opt.gbest_as_source_prob_);
                 auto &update_ant = use_best_ant ? *best_ant : *iteration_best;
-                if (update_ant.cost_ > source_solution->cost_) {
-                    update_ant = *source_solution;
-                }
 
                 double start = omp_get_wtime();
 
