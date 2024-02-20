@@ -2244,8 +2244,10 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     #pragma omp parallel default(shared)
     {
+        // Endpoints of new edges (not present in source_route) are inserted
+        // into ls_checklist and later used to guide local search
         vector<uint32_t> ls_checklist;
-        ls_checklist.reserve(128);
+        ls_checklist.reserve(dimension);
 
         for (int32_t iteration = 1 ; iteration <= iterations ; ++iteration) {
             #pragma omp barrier
@@ -2282,10 +2284,10 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
-
-                auto visited = ant.visited_bitmask_;
                 visited.clear();
                 visited.set_bit(start_node);
+
+                ls_checklist.clear();
 
                 // We are counting edges (undirected) that are not present in
                 // the source_route. The factual # of new edges can be +1 as we
