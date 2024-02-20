@@ -2213,7 +2213,7 @@ run_dynamic_raco(const ProblemInstance &problem,
     vector<double> nn_product_cache(dimension * cl_size);
 
     auto best_ant = make_unique<Route>(start_route, cost_fn);
-    best_ant.cost_ = initial_cost;
+    best_ant->cost_ = initial_cost;
 
     auto ants_count = opt.ants_count_;
     const auto steps = opt.steps_;
