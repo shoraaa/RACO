@@ -2364,15 +2364,6 @@ run_dynamic_raco(const ProblemInstance &problem,
                     curr_node = sel;
 
                     if (!local_source.contains_edge(curr, sel)) {
-                        /*
-                        For simplicity and efficiency, we are looking only at
-                        the (curr, sel) edge even though the relocation could
-                        have created additional new edges.
-
-                        Actually, we can have up to 3 new edges, however the
-                        subsequent moves can break some of these, so the final
-                        number can be much smaller.
-                        */
                         new_edges += 1;
 
                         if (!contains(ls_checklist, curr)) { ls_checklist.push_back(curr); }
@@ -2392,11 +2383,6 @@ run_dynamic_raco(const ProblemInstance &problem,
                     route.two_opt_nn(problem, ls_checklist, opt.ls_cand_list_size_);
                     ls_time += omp_get_wtime() - start;
                 }
-
-                // No need to recalculate route length -- we are updating it along with the changes
-                // resp. to the current local source solution
-                // ant.cost_ = problem.calculate_route_length(route.route_);
-                assert( abs(problem.calculate_route_length(route.route_) - route.cost_) < 1e-6 );
 
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
@@ -2501,7 +2487,7 @@ run_dynamic_raco(const ProblemInstance &problem,
     comp_log("local search time", ls_time);
     comp_log("loop count", loop_count);
 
-    return unique_ptr<Solution>(dynamic_cast<Solution*>(best_ant.release()));
+    return unique_ptr<Route>(dynamic_cast<Route*>(best_ant.release()));
 }
 
 
