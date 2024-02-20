@@ -329,6 +329,27 @@ public:
             prev_node = node;
         }
     }
+
+    double deposit_pheromone(const Route &sol) {
+        const double deposit = 1.0 / sol.cost_;
+        auto prev_node = sol.route_.back();
+        auto &pheromone = get_pheromone();
+        for (auto node : sol.route_) {
+            // The global update of the pheromone trails
+            pheromone.increase(prev_node, node, deposit, trail_limits_.max_);
+            prev_node = node;
+        }
+        return deposit;
+    }
+
+    void deposit_pheromone_smooth(const Route &sol) {
+        auto prev_node = sol.route_.back();
+        auto &pheromone = get_pheromone();
+        for (auto node : sol.route_) {
+            pheromone.increase(prev_node, node, deposit_smooth_, trail_limits_.max_);
+            prev_node = node;
+        }
+    }
 };
 
 class MatrixModel : public ACOModel<MatrixModel> {
