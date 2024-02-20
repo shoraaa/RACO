@@ -808,7 +808,7 @@ uint32_t select_next_node(const Pheromone_t &/*pheromone*/,
     for (auto node : nn_list) {
         uint32_t valid = 1 - visited.is_set(node);
         cl[cl_size] = node;
-        auto prod = 1.0 * valid;
+        auto prod = *nn_product_cache_it * valid;
         cl_products_sum += prod;
         cl_product_prefix_sums[cl_size] = cl_products_sum;
         cl_size += valid;
@@ -2244,6 +2244,10 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     #pragma omp parallel default(shared)
     {
+        // Endpoints of new edges (not present in source_route) are inserted
+        // into ls_checklist and later used to guide local search
+        vector<uint32_t> ls_checklist;
+        ls_checklist.reserve(dimension);
 
         for (int32_t iteration = 1 ; iteration <= iterations ; ++iteration) {
             #pragma omp barrier
@@ -2391,7 +2395,7 @@ run_dynamic_raco(const ProblemInstance &problem,
                     }
                 }
                 if (iteration_best->cost_ < best_ant->cost_) {
-                    best_ant->update(iteration_best->route_, iteration_best->cost_);
+                    // best_ant->update(iteration_best->route_, iteration_best->cost_);
 
                     auto error = problem.calc_relative_error(best_ant->cost_);
                     best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
@@ -2426,6 +2430,11 @@ run_dynamic_raco(const ProblemInstance &problem,
                 // source_solution
                 if (opt.smooth_) {
                     model.deposit_pheromone_smooth(update_ant);
+                    for (auto &ant : ants) {
+                        if (ant.cost_ < source_solution->cost_) {
+                            model.deposit_pheromone_smooth(ant);
+                        }
+                    }
                 } else {
                     model.deposit_pheromone(update_ant);
                 }
