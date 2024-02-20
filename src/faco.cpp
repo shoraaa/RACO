@@ -2154,7 +2154,7 @@ run_dynamic_raco(const ProblemInstance &problem,
     const auto bl_size    = opt.backup_list_size_;
     const auto iterations = opt.iterations_;
     const auto use_ls     = opt.local_search_ != 0;
-    // const auto cost_fn = problem
+    const auto cost_fn = problem.get_distance_fn();
 
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
@@ -2203,14 +2203,15 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     vector<double> nn_product_cache(dimension * cl_size);
 
-    auto best_ant = make_unique<Ant>(start_route, initial_cost);
+    auto best_ant = make_unique<Ant>(start_route, cost_fn);
+    best_ant.cost_ = initial_cost;
 
     auto ants_count = opt.ants_count_;
     const auto steps = opt.steps_;
     const auto actual_ants_count = ants_count * (1 << ((iterations + steps - 1) / steps - 1));
     cout << "Steps: " << steps << ", actual ants count: " << actual_ants_count << endl;
 
-    vector<Ant> ants(ants_count);
+    vector<Route> ants(ants_count);
     for (auto &ant : ants) {
         ant = *best_ant;
     }
@@ -2218,7 +2219,8 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     Ant *iteration_best = nullptr;
 
-    auto source_solution = make_unique<Solution>(start_route, best_ant->cost_);
+    auto source_solution = make_unique<Route>(start_route, cost_fn);
+    source_solution.cost_ = best_ant->cost_;
 
     // The following are mainly for raporting purposes
     Trace<ComputationsLog_t, SolutionCost> best_cost_trace(comp_log,
@@ -2279,9 +2281,10 @@ run_dynamic_raco(const ProblemInstance &problem,
             for (uint32_t ant_idx = 0; ant_idx < ants_count; ++ant_idx) {
                 const auto target_new_edges = opt.min_new_edges_;
 
-                auto &ant = ants[ant_idx];
+                auto &route = ants[ant_idx];
+                route = Route {local_source};
                 // ant.initialize(dimension);
-                Route route { local_source };  // We use "external" route and only copy it back to ant
+                // Route route { local_source };  // We use "external" route and only copy it back to ant
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
@@ -2368,13 +2371,13 @@ run_dynamic_raco(const ProblemInstance &problem,
                 // This is a minor optimization -- if we have not found a better sol., then
                 // we are unlikely to become new source solution (in the next iteration).
                 // In other words, we save the new solution only if it is an improvement.
-                if (!opt.keep_better_ant_sol_ 
-                        || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
-                    ant.cost_  = route.cost_;
-                    ant.route_ = route.route_;
+                // if (!opt.keep_better_ant_sol_ 
+                //         || (opt.keep_better_ant_sol_ && route.cost_ < ant.cost_)) {
+                //     ant.cost_  = route.cost_;
+                //     ant.route_ = route.route_;
 
-                    ++ant_sol_updates;
-                }
+                //     ++ant_sol_updates;
+                // }
 
                 // We can benefit immediately from the improved solution by
                 // updating the current local source solution.
@@ -2384,7 +2387,7 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                     ++local_source_sol_updates;
                 }
-                sol_costs[ant_idx] = ant.cost_;
+                sol_costs[ant_idx] = route.cost_;
             }
 
             #pragma omp master
