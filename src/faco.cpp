@@ -858,7 +858,7 @@ run_focused_aco(const ProblemInstance &problem,
     const auto use_ls     = opt.local_search_ != 0;
 
     auto min_new_edges = opt.min_new_edges_;
-    if (min_new_edges == -1) {
+    if (min_new_edges == 0) {
         if (dimension <= 10000) min_new_edges = 32;
         else if (dimension <= 20000) min_new_edges = 16;
         else if (dimension <= 40000) min_new_edges = 8;
@@ -1339,7 +1339,7 @@ run_mfaco(const ProblemInstance &problem,
     const auto use_ls     = opt.local_search_ != 0;
 
     auto min_new_edges = opt.min_new_edges_;
-    if (min_new_edges == -1) {
+    if (min_new_edges == 0) {
         if (dimension <= 10000) min_new_edges = 32;
         else if (dimension <= 20000) min_new_edges = 16;
         else if (dimension <= 40000) min_new_edges = 8;
@@ -1894,7 +1894,7 @@ run_raco(const ProblemInstance &problem,
     const auto use_ls     = opt.local_search_ != 0;
 
     auto min_new_edges = opt.min_new_edges_;
-    if (min_new_edges == -1) {
+    if (min_new_edges == 0) {
         if (dimension <= 10000) min_new_edges = 32;
         else if (dimension <= 20000) min_new_edges = 16;
         else if (dimension <= 40000) min_new_edges = 8;
@@ -2209,7 +2209,7 @@ run_dynamic_raco(const ProblemInstance &problem,
     const auto cost_fn = problem.get_distance_fn();
 
     auto min_new_edges = opt.min_new_edges_;
-    if (min_new_edges == -1) {
+    if (min_new_edges == 0) {
         if (dimension <= 10000) min_new_edges = 32;
         else if (dimension <= 20000) min_new_edges = 16;
         else if (dimension <= 40000) min_new_edges = 8;
