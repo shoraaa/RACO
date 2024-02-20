@@ -808,7 +808,7 @@ uint32_t select_next_node(const Pheromone_t &/*pheromone*/,
     for (auto node : nn_list) {
         uint32_t valid = 1 - visited.is_set(node);
         cl[cl_size] = node;
-        auto prod = *nn_product_cache_it * valid;
+        auto prod = 1.0 * valid;
         cl_products_sum += prod;
         cl_product_prefix_sums[cl_size] = cl_products_sum;
         cl_size += valid;
@@ -2263,7 +2263,7 @@ run_dynamic_raco(const ProblemInstance &problem,
             local_source.cost_ = source_solution->cost_;
 
             //Mask visited(dimension);
-            // Bitmask visited(dimension);
+            Bitmask visited(dimension);
 
             // Changing schedule from "static" to "dynamic" can speed up
             // computations a bit, however it introduces non-determinism due to
@@ -2280,13 +2280,10 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                 auto start_node = get_rng().next_uint32(dimension);
                 // ant.visit(start_node);
-
-                auto visited = ant.visited_bitmask_;
                 visited.clear();
                 visited.set_bit(start_node);
 
-                vector<uint32_t> ls_checklist;
-                ls_checklist.reserve(target_new_edges * 32);
+                ls_checklist.clear();
 
                 // We are counting edges (undirected) that are not present in
                 // the source_route. The factual # of new edges can be +1 as we
