@@ -876,6 +876,15 @@ public:
         }
     }
 
+    void update(const std::vector<uint32_t> &route, double cost) {
+        route_ = route;
+        cost_ = cost;
+        uint32_t pos = 0;
+        for (auto node : route) {
+            positions_[node] = pos++;
+        }
+    }
+
     /**
     Relocates node so that it directly follows the target node.
 
@@ -2203,7 +2212,7 @@ run_dynamic_raco(const ProblemInstance &problem,
 
     vector<double> nn_product_cache(dimension * cl_size);
 
-    auto best_ant = make_unique<Ant>(start_route, cost_fn);
+    auto best_ant = make_unique<Route>(start_route, cost_fn);
     best_ant.cost_ = initial_cost;
 
     auto ants_count = opt.ants_count_;
