@@ -2406,7 +2406,7 @@ run_dynamic_raco(const ProblemInstance &problem,
                     best_ant->update(iteration_best->route_, iteration_best->cost_);
 
                     auto error = problem.calc_relative_error(best_ant->cost_);
-                    best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
+                    // best_cost_trace.add({ best_ant->cost_, error }, iteration, main_timer());
 
                     if (!opt.smooth_) {
                         model.update_trail_limits(best_ant->cost_);
