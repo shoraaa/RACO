@@ -2161,6 +2161,7 @@ run_dynamic_raco(const ProblemInstance &problem,
         else if (dimension <= 40000) min_new_edges = 8;
         else min_new_edges = 4;
     }
+    cout << "Minimum changes: " << min_new_edges << endl;
 
     Timer start_sol_timer;
     const auto start_routes = par_build_initial_routes(problem, use_ls);
