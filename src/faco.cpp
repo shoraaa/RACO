@@ -2309,10 +2309,10 @@ run_dynamic_raco(const ProblemInstance &problem,
                     loop_count += 1;
 
                     auto curr = curr_node;
-                    if (opt.force_new_edge_) {
-                        visited.set_bit(route.get_succ(curr));
-                        visited.set_bit(route.get_pred(curr));
-                    }
+                    // if (opt.force_new_edge_) {
+                    //     visited.set_bit(route.get_succ(curr));
+                    //     visited.set_bit(route.get_pred(curr));
+                    // }
 
                     double start_snn = omp_get_wtime();
                     auto sel = select_next_node(pheromone, heuristic,
@@ -2323,10 +2323,10 @@ run_dynamic_raco(const ProblemInstance &problem,
                                                 visited);
                     select_next_time += omp_get_wtime() - start_snn;
 
-                    if (opt.force_new_edge_) {
-                        visited.clear_bit(route.get_succ(curr));
-                        visited.clear_bit(route.get_pred(curr));
-                    }
+                    // if (opt.force_new_edge_) {
+                    //     visited.clear_bit(route.get_succ(curr));
+                    //     visited.clear_bit(route.get_pred(curr));
+                    // }
 
                     const auto sel_pred = route.get_pred(sel);
 
