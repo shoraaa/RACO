@@ -2311,6 +2311,7 @@ run_dynamic_raco(const ProblemInstance &problem,
                     auto curr = curr_node;
                     if (opt.force_new_edge_) {
                         visited.set_bit(route.get_succ(curr));
+                        visited.set_bit(route.get_pred(curr));
                     }
 
                     double start_snn = omp_get_wtime();
@@ -2324,11 +2325,12 @@ run_dynamic_raco(const ProblemInstance &problem,
 
                     if (opt.force_new_edge_) {
                         visited.clear_bit(route.get_succ(curr));
+                        visited.clear_bit(route.get_pred(curr));
                     }
 
                     const auto sel_pred = route.get_pred(sel);
 
-                    visited.set_bit(sel);
+                    // visited.set_bit(sel);
                     ++visited_count;
 
                     double start_rn = omp_get_wtime();
