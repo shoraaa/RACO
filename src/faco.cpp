@@ -2524,133 +2524,138 @@ int main(int argc, char *argv[]) {
         omp_set_num_threads(args.threads_);
     }
 
-    try {
-        json experiment_record;
-        Log exp_log(experiment_record, std::cout);
+    auto tryACOAlg = [&](string algorithm) {
+        try {
+            json experiment_record;
+            Log exp_log(experiment_record, std::cout);
 
-        auto problem = load_tsplib_instance(args.problem_path_.c_str());
-        load_best_known_solutions("best-known.json");
-        problem.best_known_cost_ = get_best_known_value(problem.name_, -1);
+            auto problem = load_tsplib_instance(args.problem_path_.c_str());
+            load_best_known_solutions("best-known.json");
+            problem.best_known_cost_ = get_best_known_value(problem.name_, -1);
 
-        Timer nn_lists_timer;
-        auto nn_count = std::max(args.cand_list_size_ + args.backup_list_size_,
-                                 args.ls_cand_list_size_);
-        problem.compute_nn_lists(nn_count);
-        exp_log("nn and backup lists calc time", nn_lists_timer());
+            Timer nn_lists_timer;
+            auto nn_count = std::max(args.cand_list_size_ + args.backup_list_size_,
+                                    args.ls_cand_list_size_);
+            problem.compute_nn_lists(nn_count);
+            exp_log("nn and backup lists calc time", nn_lists_timer());
 
-        aco_fn alg = nullptr; 
-        if (args.algorithm_ == "faco") {
-            alg = run_focused_aco;
+            aco_fn alg = nullptr; 
+            if (algorithm == "faco") {
+                alg = run_focused_aco;
 
-            if (args.ants_count_ == 0) {
-                auto r = 4 * sqrt(problem.dimension_);
-                args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
-            }
-        } else if (args.algorithm_ == "mfaco") {
-            alg = run_mfaco;
+                if (args.ants_count_ == 0) {
+                    auto r = 4 * sqrt(problem.dimension_);
+                    args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
+                }
+            } else if (algorithm == "mfaco") {
+                alg = run_mfaco;
 
-            if (args.ants_count_ == 0) {
-                auto r = 4 * sqrt(problem.dimension_);
-                args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
-            }
-        } else if (args.algorithm_ == "mmas") {
-            alg = run_mmas<CandListModel>;
+                if (args.ants_count_ == 0) {
+                    auto r = 4 * sqrt(problem.dimension_);
+                    args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
+                }
+            } else if (algorithm == "mmas") {
+                alg = run_mmas<CandListModel>;
 
-            if (args.ants_count_ == 0) {
-                args.ants_count_ = problem.dimension_;
-            }
-        } else if (args.algorithm_ == "raco") {
-            alg = run_raco;
+                if (args.ants_count_ == 0) {
+                    args.ants_count_ = problem.dimension_;
+                }
+            } else if (algorithm == "raco") {
+                alg = run_raco;
 
-            if (args.ants_count_ == 0) {
-                auto r = 5 * sqrt(problem.dimension_);
-                args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
-            }
-        } else if (args.algorithm_ == "dynamic_raco") {
-            alg = run_dynamic_raco;
+                if (args.ants_count_ == 0) {
+                    auto r = 5 * sqrt(problem.dimension_);
+                    args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
+                }
+            } else if (algorithm == "dynamic_raco") {
+                alg = run_dynamic_raco;
 
-            if (args.ants_count_ == 0) {
-                auto r = 5 * sqrt(problem.dimension_);
-                args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
-            }
-        }
-
-        dump(args, experiment_record["args"]);
-        experiment_record["executions"] = json::array();
-        vector<double> costs;
-        vector<double> times;
-
-        Timer trial_timer;
-        std::string res_filepath{};
-
-        for (int i = 0 ; i < args.repeat_ ; ++i) {
-            cout << "Starting execution: " << i << "\n";
-            json execution_log;
-            Log exlog(execution_log, std::cout);
-            exlog("started_at", get_current_datetime_string("-", ":", "T", true));
-
-            Timer execution_timer;
-            auto result = alg(problem, args, exlog);
-
-            if ( abs( problem.calculate_route_length(result->route_) - result->cost_ ) > 1e-6) {
-                cerr << "wrong route?: " << problem.calculate_route_length(result->route_) << ' ' << result->cost_ << '\n';
-                abort();
-            }
-
-            const auto execution_time = execution_timer();
-            exlog("execution time", execution_time);
-            exlog("finished_at", get_current_datetime_string("-", ":", "T", true));
-            exlog("final cost", result->cost_);
-            exlog("final error", problem.calc_relative_error(result->cost_));
-
-            experiment_record["executions"].emplace_back(execution_log);
-
-            costs.push_back(result->cost_);
-            times.push_back(execution_time);
-
-            bool is_last_execution = (i + 1 == args.repeat_);
-            if (is_last_execution) {
-                exp_log("trial time", trial_timer());
-
-                if (args.save_route_picture_) {
-                    auto filename = ((!problem.name_.empty()) ? problem.name_ : "route") + ".svg";
-                    auto svg_path = get_results_dir_path(args) / filename;
-                    Timer t;
-                    route_to_svg(problem, result->route_, svg_path);
-                    cout << "Route image saved to " << filename << " in " << t() << " seconds\n";
+                if (args.ants_count_ == 0) {
+                    auto r = 5 * sqrt(problem.dimension_);
+                    args.ants_count_ = static_cast<uint32_t>(lround(r / 64) * 64);
                 }
             }
 
-            // Write the results computed so far to a file -- this prevents
-            // losing data in case of an unexpected program termination
-            exp_log("trial mean cost", static_cast<int64_t>(sample_mean(costs)));
-            exp_log("trial mean error", problem.calc_relative_error(sample_mean(costs)));
+            dump(args, experiment_record["args"]);
+            experiment_record["executions"] = json::array();
+            vector<double> costs;
+            vector<double> times;
 
-            auto min_cost = *min_element(begin(costs), end(costs));
-            exp_log("trial min cost", static_cast<int64_t>(min_cost));
-            exp_log("trial min error", problem.calc_relative_error(min_cost));
+            Timer trial_timer;
+            std::string res_filepath{};
 
-            auto max_cost = *max_element(begin(costs), end(costs));
-            exp_log("trial max cost", static_cast<int64_t>(max_cost));
-            exp_log("trial max error", problem.calc_relative_error(max_cost));
+            for (int i = 0 ; i < args.repeat_ ; ++i) {
+                cout << "Starting execution: " << i << "\n";
+                json execution_log;
+                Log exlog(execution_log, std::cout);
+                exlog("started_at", get_current_datetime_string("-", ":", "T", true));
 
-            exp_log("trial mean time", static_cast<int64_t>(sample_mean(times)));
+                Timer execution_timer;
+                auto result = alg(problem, args, exlog);
 
-            if (costs.size() > 1) {
-                exp_log("trial stdev cost", sample_stdev(costs));
+                if ( abs( problem.calculate_route_length(result->route_) - result->cost_ ) > 1e-6) {
+                    cerr << "wrong route?: " << problem.calculate_route_length(result->route_) << ' ' << result->cost_ << '\n';
+                    abort();
+                }
+
+                const auto execution_time = execution_timer();
+                exlog("execution time", execution_time);
+                exlog("finished_at", get_current_datetime_string("-", ":", "T", true));
+                exlog("final cost", result->cost_);
+                exlog("final error", problem.calc_relative_error(result->cost_));
+
+                experiment_record["executions"].emplace_back(execution_log);
+
+                costs.push_back(result->cost_);
+                times.push_back(execution_time);
+
+                bool is_last_execution = (i + 1 == args.repeat_);
+                if (is_last_execution) {
+                    exp_log("trial time", trial_timer());
+
+                    if (args.save_route_picture_) {
+                        auto filename = ((!problem.name_.empty()) ? problem.name_ : "route") + ".svg";
+                        auto svg_path = get_results_dir_path(args) / filename;
+                        Timer t;
+                        route_to_svg(problem, result->route_, svg_path);
+                        cout << "Route image saved to " << filename << " in " << t() << " seconds\n";
+                    }
+                }
+
+                // Write the results computed so far to a file -- this prevents
+                // losing data in case of an unexpected program termination
+                exp_log("trial mean cost", static_cast<int64_t>(sample_mean(costs)));
+                exp_log("trial mean error", problem.calc_relative_error(sample_mean(costs)));
+
+                auto min_cost = *min_element(begin(costs), end(costs));
+                exp_log("trial min cost", static_cast<int64_t>(min_cost));
+                exp_log("trial min error", problem.calc_relative_error(min_cost));
+
+                auto max_cost = *max_element(begin(costs), end(costs));
+                exp_log("trial max cost", static_cast<int64_t>(max_cost));
+                exp_log("trial max error", problem.calc_relative_error(max_cost));
+
+                exp_log("trial mean time", static_cast<int64_t>(sample_mean(times)));
+
+                if (costs.size() > 1) {
+                    exp_log("trial stdev cost", sample_stdev(costs));
+                }
+
+                if (res_filepath.length() == 0) {  // On first attempt set the filename
+                    res_filepath = get_results_file_path(args, problem);
+                }
+                if (ofstream out(res_filepath); out.is_open()) {
+                    cout << "Saving results to: " << res_filepath << endl;
+                    out << experiment_record.dump(1);
+                    out.close();
+                }
             }
-
-            if (res_filepath.length() == 0) {  // On first attempt set the filename
-                res_filepath = get_results_file_path(args, problem);
-            }
-            if (ofstream out(res_filepath); out.is_open()) {
-                cout << "Saving results to: " << res_filepath << endl;
-                out << experiment_record.dump(1);
-                out.close();
-            }
+        } catch (const runtime_error &e) {
+            cout << "An error has occurred: " << e.what() << endl;
         }
-    } catch (const runtime_error &e) {
-        cout << "An error has occurred: " << e.what() << endl;
-    }
+    };
+
+    tryACOAlg(args.algorithm_);
+    
     return 0;
 }
