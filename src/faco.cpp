@@ -2525,9 +2525,9 @@ int main(int argc, char *argv[]) {
     }
 
     auto tryACOAlg = [&](string algorithm) {
+        json experiment_record;
+        Log exp_log(experiment_record, std::cout);
         try {
-            json experiment_record;
-            Log exp_log(experiment_record, std::cout);
 
             auto problem = load_tsplib_instance(args.problem_path_.c_str());
             load_best_known_solutions("best-known.json");
@@ -2641,21 +2641,30 @@ int main(int argc, char *argv[]) {
                     exp_log("trial stdev cost", sample_stdev(costs));
                 }
 
-                if (res_filepath.length() == 0) {  // On first attempt set the filename
-                    res_filepath = get_results_file_path(args, problem);
-                }
-                if (ofstream out(res_filepath); out.is_open()) {
-                    cout << "Saving results to: " << res_filepath << endl;
-                    out << experiment_record.dump(1);
-                    out.close();
-                }
+                // if (res_filepath.length() == 0) {  // On first attempt set the filename
+                //     res_filepath = get_results_file_path(args, problem);
+                // }
+                // if (ofstream out(res_filepath); out.is_open()) {
+                //     cout << "Saving results to: " << res_filepath << endl;
+                //     out << experiment_record.dump(1);
+                //     out.close();
+                // }
             }
         } catch (const runtime_error &e) {
             cout << "An error has occurred: " << e.what() << endl;
         }
+        return experiment_record;
     };
 
-    tryACOAlg(args.algorithm_);
-    
+    if (args.algorithm_ == "compare") {
+
+        auto log1 = tryACOAlg("mfaco");
+        auto log2 = tryACOAlg("raco");
+
+        cout << log1["args"]["ants"] << " " << log2["args"]["ants"] << '\n';
+
+    } else {
+        tryACOAlg(args.algorithm_);
+    }
     return 0;
 }
